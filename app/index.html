@@ -12,72 +12,73 @@
     <span class="brand-mark" aria-hidden="true">NC</span>
     <div>
       <h1>Neon Coast Cover Studio</h1>
-      <p>Turn a photo and a caption into GTA 6-style poster cover art. Everything runs on this machine — your photos never leave it.</p>
+      <p class="tagline">Build a sun-soaked game cover from your own photos.</p>
     </div>
   </div>
-  <div class="top-actions">
-    <button id="surprise-btn" type="button">Surprise me</button>
-    <button id="undo-btn" type="button">Undo</button>
-    <button id="redo-btn" type="button">Redo</button>
+  <div class="history">
+    <button type="button" id="undo-btn" disabled>Undo</button>
+    <button type="button" id="redo-btn" disabled>Redo</button>
+    <button type="button" id="surprise-btn" class="accent">Surprise me</button>
   </div>
 </header>
 
 <main class="workspace">
-  <section class="stage-wrap">
-    <canvas id="poster" width="900" height="900"></canvas>
-    <p class="stage-hint">Click a panel to select it, then drag its photo into place. Scroll-free zoom lives in the panel tools.</p>
+  <section class="stage" aria-label="Cover preview">
+    <canvas id="poster" width="1080" height="1350"></canvas>
+    <p class="hint">Click a panel to select it, then drag its photo to reframe.</p>
   </section>
 
   <aside class="controls">
-    <section class="control-block">
+    <section class="panel">
       <h2>Photos</h2>
-      <div id="photo-strip" class="photo-strip"></div>
-      <label class="upload-btn">
-        Load your own photo
-        <input id="photo-input" type="file" accept="image/*" multiple hidden>
+      <div id="photo-strip" class="strip"></div>
+      <label class="upload">
+        <span>Add your own photos</span>
+        <input type="file" id="photo-input" accept="image/*" multiple>
       </label>
-      <p class="fine">Click a photo, then click a panel to deal it in — or pick a panel first and click the photo.</p>
     </section>
 
-    <section class="control-block">
+    <section class="panel">
       <h2>Layout</h2>
-      <div id="layout-grid" class="choice-grid"></div>
-    </section>
-
-    <section class="control-block">
+      <div id="layout-grid" class="chips"></div>
       <h2>Colour grade</h2>
-      <div id="grade-grid" class="choice-grid"></div>
+      <div id="grade-grid" class="chips"></div>
     </section>
 
-    <section class="control-block">
+    <section class="panel">
       <h2>Words</h2>
-      <label>Poster title <input id="caption" type="text" maxlength="40" value="Neon Coast"></label>
-      <label>Script subtitle <input id="subtitle" type="text" maxlength="48" value="Vice City Nights"></label>
-      <label>Quote line <input id="quote" type="text" maxlength="64" value="Neon nights, no regrets."></label>
-      <label>Tag chips <input id="tags" type="text" maxlength="90" value="Vice City | Est. 2026 | Neon Coast"></label>
+      <label>Title <input type="text" id="caption" maxlength="40"></label>
+      <label>Subtitle <input type="text" id="subtitle" maxlength="48"></label>
+      <label>Quote <input type="text" id="quote" maxlength="64"></label>
+      <label>Tags <span class="note">separated by |</span>
+        <input type="text" id="tags" maxlength="80"></label>
     </section>
 
-    <section class="control-block">
-      <h2>Panel tools — <span id="panel-label">Panel 1</span></h2>
-      <label>Zoom <input id="zoom" type="range" min="1" max="3" step="0.01" value="1"></label>
+    <section class="panel">
+      <h2 id="panel-label">Panel 1</h2>
+      <label>Zoom
+        <input type="range" id="zoom" min="1" max="3" step="0.01" value="1">
+      </label>
       <div class="row">
-        <button id="flip-btn" type="button">Flip photo</button>
-        <button id="center-btn" type="button">Centre photo</button>
+        <button type="button" id="flip-btn">Flip photo</button>
+        <button type="button" id="center-btn">Centre photo</button>
       </div>
     </section>
 
-    <section class="control-block">
+    <section class="panel">
       <h2>Export PNG</h2>
       <div class="row wrap">
-        <button class="export-btn" type="button" data-w="1080" data-h="1080">1080 × 1080</button>
-        <button class="export-btn" type="button" data-w="1080" data-h="1350">1080 × 1350</button>
-        <button class="export-btn" type="button" data-w="1920" data-h="1080">1920 × 1080</button>
-        <button id="export-all" type="button">All three sizes</button>
+        <button type="button" class="export-btn" data-w="1080" data-h="1080">1080 × 1080</button>
+        <button type="button" class="export-btn" data-w="1080" data-h="1350">1080 × 1350</button>
+        <button type="button" class="export-btn" data-w="1920" data-h="1080">1920 × 1080</button>
+        <button type="button" id="export-all" class="accent">Export all</button>
       </div>
     </section>
   </aside>
 </main>
 
+<script type="module" src="src/cover.js"></script>
+<script type="module" src="src/shots.js"></script>
 <script type="module" src="src/main.js"></script>
 </body>
 </html>

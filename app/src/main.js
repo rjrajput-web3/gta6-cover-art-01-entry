@@ -1,381 +1,395 @@
-// Neon Coast Cover Studio - editor wiring.
+// Neon Coast Cover Studio — editor.
 //
-// Loads the bundled photographs and fonts, keeps the studio state, and
-// paints the live preview through cover.js. All editing features live
-// here: the photo library, panel dealing, drag-to-position, undo/redo,
-// Surprise-me presets and the PNG exports.
+// This file owns everything interactive: loading the bundled photos,
+// the state the renderer paints from, panel selection and dragging,
+// undo/redo, the Surprise-me presets and PNG export. Painting itself
+// lives in cover.js (renderCover); this file never draws poster pixels
+// directly, it only hands renderCover the canvas, the loaded images
+// and the current state — which is { layout, grade, photos, views,
+// caption, subtitle, quote, tags }, photos being library indices (one
+// per panel, dealt cyclically) and views the per-panel
+// { ox, oy, zoom, flip } framing for that panel.
 
-import { EXPORT_SIZES, GRADES, LAYOUTS, drawCover, layoutById, panelShapes } from './cover.js';
-import { publishShotPng, readShotRequest } from './shots.js';
+import { GRADES, LAYOUTS, panelsFor, renderCover } from "./cover.js";
+import { publishShotPng, readShotRequest } from "./shots.js";
 
-const SAMPLE_FILES = ['boulevard.jpg', 'pier.jpg', 'friends-neon.jpg', 'rooftop.jpg'];
+// Sample order is load-bearing: shot URLs and presets name photos by
+// their index in this list.
+const SAMPLES = ["boulevard.jpg", "pier.jpg", "friends-neon.jpg", "rooftop.jpg"];
+const EXPORTS = [
+  { w: 1080, h: 1080 },
+  { w: 1080, h: 1350 },
+  { w: 1920, h: 1080 },
+];
 
-const canvas = document.getElementById('poster');
-const ctx = canvas.getContext('2d');
+const canvas = document.getElementById("poster");
+const ctx = canvas.getContext("2d");
+const images = []; // sample Images first, user uploads appended
+let armed = null; // library index clicked in the strip, awaiting a panel
 
-// ------------------------------------------------------------- state
+// ---- state -------------------------------------------------------
 
-function blankPlacement(photo) {
-  return { photo, ox: 0, oy: 0, zoom: 1, flip: false };
+function freshView() {
+  return { ox: 0, oy: 0, zoom: 1, flip: false };
 }
 
-function dealPhotos(layoutId, keep) {
-  const count = layoutById(layoutId).panels().length;
-  const panels = [];
-  for (let i = 0; i < count; i += 1) {
-    const old = keep && keep[i];
-    panels.push(old ? { ...old } : blankPlacement(i % SAMPLE_FILES.length));
+function panelCount(layoutId) {
+  return panelsFor(layoutId, 1, 1).length;
+}
+
+// Make photos/views cover exactly `count` panels: keep the existing
+// deal where it still fits, fill new panels by cycling the library.
+function deal(layoutId, photos, views) {
+  const count = panelCount(layoutId);
+  const nextPhotos = [];
+  const nextViews = [];
+  for (let i = 0; i < count; i++) {
+    nextPhotos.push(photos && i < photos.length ? photos[i] : i % SAMPLES.length);
+    nextViews.push(views && i < views.length ? { ...views[i] } : freshView());
   }
-  return panels;
+  return { photos: nextPhotos, views: nextViews };
 }
 
+const start = deal("classic", null, null);
 const state = {
-  layout: 'classic',
-  grade: 'sunset',
-  caption: 'Neon Coast',
-  subtitle: 'Vice City Nights',
-  quote: 'Neon nights, no regrets.',
-  tags: ['Vice City', 'Est. 2026', 'Neon Coast'],
-  panels: dealPhotos('classic', null),
-  selected: 0,
+  layout: "classic",
+  grade: "sunset",
+  caption: "Neon Coast",
+  subtitle: "Vice City Nights",
+  quote: "Neon nights, no regrets.",
+  tags: ["Vice City", "Est. 2026", "Neon Coast"],
+  photos: start.photos,
+  views: start.views,
 };
+let selected = 0;
 
-const library = []; // loaded Image objects, samples first, uploads after
-let armedPhoto = null; // library index waiting to be dealt into a panel
+function paint() {
+  renderCover(ctx, canvas.width, canvas.height, images, state);
+}
 
-// ------------------------------------------------------------- history
+// ---- undo / redo ---------------------------------------------------
 
-const undoStack = [];
-const redoStack = [];
+const past = [];
+const future = [];
 
 function snapshot() {
-  return JSON.stringify({
-    layout: state.layout, grade: state.grade, caption: state.caption,
-    subtitle: state.subtitle, quote: state.quote, tags: state.tags,
-    panels: state.panels, selected: state.selected,
-  });
+  return JSON.stringify({ state, selected });
 }
-
-function restore(text) {
-  const s = JSON.parse(text);
-  Object.assign(state, s);
-  syncControls();
-  render();
+function applySnapshot(text) {
+  const saved = JSON.parse(text);
+  for (const key of Object.keys(state)) delete state[key];
+  Object.assign(state, saved.state);
+  selected = Math.min(saved.selected, state.photos.length - 1);
+  syncAll();
+  paint();
 }
-
-function recordHistory() {
-  undoStack.push(snapshot());
-  if (undoStack.length > 60) undoStack.shift();
-  redoStack.length = 0;
-  syncHistoryButtons();
+function checkpoint() {
+  past.push(snapshot());
+  if (past.length > 60) past.shift();
+  future.length = 0;
+  syncHistory();
 }
-
-function syncHistoryButtons() {
-  document.getElementById('undo-btn').disabled = undoStack.length === 0;
-  document.getElementById('redo-btn').disabled = redoStack.length === 0;
+function syncHistory() {
+  document.getElementById("undo-btn").disabled = past.length === 0;
+  document.getElementById("redo-btn").disabled = future.length === 0;
 }
-
-document.getElementById('undo-btn').addEventListener('click', () => {
-  if (!undoStack.length) return;
-  redoStack.push(snapshot());
-  restore(undoStack.pop());
-  syncHistoryButtons();
+document.getElementById("undo-btn").addEventListener("click", () => {
+  if (!past.length) return;
+  future.push(snapshot());
+  applySnapshot(past.pop());
+  syncHistory();
 });
-document.getElementById('redo-btn').addEventListener('click', () => {
-  if (!redoStack.length) return;
-  undoStack.push(snapshot());
-  restore(redoStack.pop());
-  syncHistoryButtons();
+document.getElementById("redo-btn").addEventListener("click", () => {
+  if (!future.length) return;
+  past.push(snapshot());
+  applySnapshot(future.pop());
+  syncHistory();
 });
 
-// ------------------------------------------------------------- render
+// ---- chooser grids (layout + grade) --------------------------------
 
-function render() {
-  drawCover(ctx, canvas.width, canvas.height, state, library);
+function fillGrid(id, items, current, pick) {
+  const grid = document.getElementById(id);
+  grid.textContent = "";
+  for (const item of items) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = item.name;
+    btn.classList.toggle("active", item.id === current);
+    btn.addEventListener("click", () => pick(item.id));
+    grid.appendChild(btn);
+  }
 }
-
-// ------------------------------------------------------------- choosers
-
-function buildChooser(elId, items, current, onPick) {
-  const el = document.getElementById(elId);
-  el.innerHTML = '';
-  items.forEach((item) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = item.name;
-    if (item.id === current) b.classList.add('active');
-    b.addEventListener('click', () => onPick(item.id));
-    el.appendChild(b);
-  });
-}
-
-function buildChoosers() {
-  buildChooser('layout-grid', LAYOUTS, state.layout, (id) => {
+function fillChoosers() {
+  fillGrid("layout-grid", LAYOUTS, state.layout, (id) => {
     if (id === state.layout) return;
-    recordHistory();
+    checkpoint();
     state.layout = id;
-    state.panels = dealPhotos(id, state.panels);
-    state.selected = Math.min(state.selected, state.panels.length - 1);
-    buildChoosers();
+    const dealt = deal(id, state.photos, state.views);
+    state.photos = dealt.photos;
+    state.views = dealt.views;
+    selected = Math.min(selected, state.photos.length - 1);
+    fillChoosers();
     syncPanelTools();
-    render();
+    paint();
   });
-  buildChooser('grade-grid', GRADES, state.grade, (id) => {
+  fillGrid("grade-grid", GRADES, state.grade, (id) => {
     if (id === state.grade) return;
-    recordHistory();
+    checkpoint();
     state.grade = id;
-    buildChoosers();
-    render();
+    fillChoosers();
+    paint();
   });
 }
 
-// ------------------------------------------------------------- photo library
+// ---- photo library -------------------------------------------------
 
-function buildPhotoStrip() {
-  const strip = document.getElementById('photo-strip');
-  strip.innerHTML = '';
-  library.forEach((img, i) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    if (armedPhoto === i) b.classList.add('active');
-    const thumb = document.createElement('img');
+function fillStrip() {
+  const strip = document.getElementById("photo-strip");
+  strip.textContent = "";
+  images.forEach((img, i) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.classList.toggle("active", armed === i);
+    const thumb = document.createElement("img");
     thumb.src = img.src;
-    thumb.alt = `Photo ${i + 1}`;
-    b.appendChild(thumb);
-    b.addEventListener('click', () => {
-      if (armedPhoto === i) {
-        armedPhoto = null;
-      } else if (state.panels[state.selected]) {
-        recordHistory();
-        state.panels[state.selected] = blankPlacement(i);
-        armedPhoto = null;
-        render();
+    thumb.alt = "Photo " + (i + 1);
+    btn.appendChild(thumb);
+    btn.addEventListener("click", () => {
+      if (armed === i) {
+        armed = null;
+      } else {
+        // A panel is always selected, so a photo click deals straight
+        // into it; arming only matters for the next canvas click when
+        // the user clicks a photo and then a different panel — the
+        // deal below already covers the common path, so also arm it.
+        checkpoint();
+        state.photos[selected] = i;
+        state.views[selected] = freshView();
+        armed = i;
+        paint();
       }
-      buildPhotoStrip();
+      fillStrip();
     });
-    strip.appendChild(b);
+    strip.appendChild(btn);
   });
 }
 
-document.getElementById('photo-input').addEventListener('change', (ev) => {
-  const files = [...ev.target.files];
+document.getElementById("photo-input").addEventListener("change", (ev) => {
+  const files = Array.from(ev.target.files || []);
+  ev.target.value = "";
   if (!files.length) return;
-  recordHistory();
-  let pending = files.length;
-  files.forEach((file) => {
-    const url = URL.createObjectURL(file);
+  checkpoint();
+  let left = files.length;
+  for (const file of files) {
     const img = new Image();
     img.onload = () => {
-      library.push(img);
-      pending -= 1;
-      if (pending === 0) {
-        buildPhotoStrip();
-        render();
-      }
+      images.push(img);
+      left -= 1;
+      if (left === 0) { fillStrip(); paint(); }
     };
-    img.src = url;
-  });
-  ev.target.value = '';
+    img.onerror = () => { left -= 1; };
+    img.src = URL.createObjectURL(file);
+  }
 });
 
-// ------------------------------------------------------------- words
+// ---- words -----------------------------------------------------------
 
-function bindText(id, key, splitTags) {
+function bindWord(id, apply) {
   const el = document.getElementById(id);
-  el.addEventListener('input', () => {
-    state[key] = splitTags
-      ? el.value.split('|').map((t) => t.trim()).filter(Boolean)
-      : el.value;
-    render();
-  });
-  el.addEventListener('change', () => recordHistory());
+  el.addEventListener("input", () => { apply(el.value); paint(); });
+  el.addEventListener("change", () => checkpoint());
 }
+bindWord("caption", (v) => { state.caption = v; });
+bindWord("subtitle", (v) => { state.subtitle = v; });
+bindWord("quote", (v) => { state.quote = v; });
+bindWord("tags", (v) => {
+  state.tags = v.split("|").map((t) => t.trim()).filter(Boolean);
+});
 
-bindText('caption', 'caption', false);
-bindText('subtitle', 'subtitle', false);
-bindText('quote', 'quote', false);
-bindText('tags', 'tags', true);
-
-// ------------------------------------------------------------- panel tools
+// ---- panel tools -----------------------------------------------------
 
 function syncPanelTools() {
-  const place = state.panels[state.selected];
-  document.getElementById('panel-label').textContent = `Panel ${state.selected + 1}`;
-  document.getElementById('zoom').value = place ? place.zoom : 1;
+  document.getElementById("panel-label").textContent = "Panel " + (selected + 1);
+  const view = state.views[selected];
+  document.getElementById("zoom").value = view ? view.zoom : 1;
 }
-
-document.getElementById('zoom').addEventListener('input', (ev) => {
-  const place = state.panels[state.selected];
-  if (!place) return;
-  place.zoom = Number(ev.target.value);
-  render();
+document.getElementById("zoom").addEventListener("input", (ev) => {
+  const view = state.views[selected];
+  if (!view) return;
+  view.zoom = Number(ev.target.value);
+  paint();
 });
-document.getElementById('zoom').addEventListener('change', () => recordHistory());
-document.getElementById('flip-btn').addEventListener('click', () => {
-  const place = state.panels[state.selected];
-  if (!place) return;
-  recordHistory();
-  place.flip = !place.flip;
-  render();
+document.getElementById("zoom").addEventListener("change", () => checkpoint());
+document.getElementById("flip-btn").addEventListener("click", () => {
+  const view = state.views[selected];
+  if (!view) return;
+  checkpoint();
+  view.flip = !view.flip;
+  paint();
 });
-document.getElementById('center-btn').addEventListener('click', () => {
-  const place = state.panels[state.selected];
-  if (!place) return;
-  recordHistory();
-  place.ox = 0;
-  place.oy = 0;
-  render();
+document.getElementById("center-btn").addEventListener("click", () => {
+  const view = state.views[selected];
+  if (!view) return;
+  checkpoint();
+  view.ox = 0;
+  view.oy = 0;
+  syncPanelTools();
+  paint();
 });
 
-// ------------------------------------------------------------- canvas gestures
+// ---- canvas: select a panel, drag its photo --------------------------
 
-function canvasPoint(ev) {
+function pointerFraction(ev) {
   const r = canvas.getBoundingClientRect();
-  return {
-    x: (ev.clientX - r.left) / r.width,
-    y: (ev.clientY - r.top) / r.height,
-  };
+  return { x: (ev.clientX - r.left) / r.width, y: (ev.clientY - r.top) / r.height };
 }
-
-function panelAt(pt) {
-  const shapes = panelShapes(state.layout);
-  for (let i = shapes.length - 1; i >= 0; i -= 1) {
-    const s = shapes[i];
-    if (pt.x >= s.x && pt.x <= s.x + s.w && pt.y >= s.y && pt.y <= s.y + s.h) return i;
+function panelIndexAt(pt) {
+  const rects = panelsFor(state.layout, 1, 1);
+  for (let i = rects.length - 1; i >= 0; i--) {
+    const p = rects[i];
+    if (pt.x >= p.x && pt.x <= p.x + p.w && pt.y >= p.y && pt.y <= p.y + p.h) return i;
   }
   return -1;
 }
 
-let drag = null;
-canvas.addEventListener('pointerdown', (ev) => {
-  const idx = panelAt(canvasPoint(ev));
+let dragFrom = null;
+canvas.addEventListener("pointerdown", (ev) => {
+  const idx = panelIndexAt(pointerFraction(ev));
   if (idx < 0) return;
-  if (armedPhoto !== null) {
-    recordHistory();
-    state.panels[idx] = blankPlacement(armedPhoto);
-    armedPhoto = null;
-    buildPhotoStrip();
+  checkpoint();
+  if (armed !== null && armed !== state.photos[idx]) {
+    state.photos[idx] = armed;
+    state.views[idx] = freshView();
   }
-  if (idx !== state.selected) {
-    state.selected = idx;
-    syncPanelTools();
-  }
-  recordHistory();
-  drag = { last: canvasPoint(ev) };
+  armed = null;
+  fillStrip();
+  selected = idx;
+  syncPanelTools();
+  dragFrom = pointerFraction(ev);
   canvas.setPointerCapture(ev.pointerId);
+  paint();
 });
-canvas.addEventListener('pointermove', (ev) => {
-  if (!drag) return;
-  const pt = canvasPoint(ev);
-  const place = state.panels[state.selected];
-  place.ox = Math.max(-1, Math.min(1, place.ox + (pt.x - drag.last.x) * 2));
-  place.oy = Math.max(-1, Math.min(1, place.oy + (pt.y - drag.last.y) * 2));
-  drag.last = pt;
-  render();
+canvas.addEventListener("pointermove", (ev) => {
+  if (!dragFrom) return;
+  const pt = pointerFraction(ev);
+  const view = state.views[selected];
+  if (view) {
+    const clamp = (v) => Math.max(-1, Math.min(1, v));
+    view.ox = clamp(view.ox + (pt.x - dragFrom.x) * 2);
+    view.oy = clamp(view.oy + (pt.y - dragFrom.y) * 2);
+  }
+  dragFrom = pt;
+  paint();
 });
-canvas.addEventListener('pointerup', () => { drag = null; });
+canvas.addEventListener("pointerup", () => { dragFrom = null; });
+canvas.addEventListener("pointercancel", () => { dragFrom = null; });
 
-// ------------------------------------------------------------- surprise presets
+// ---- Surprise me -------------------------------------------------------
+// Six hand-built presets; picking one is an editor action, so it may
+// use Math.random — the paint path itself never does.
 
 const PRESETS = [
-  { layout: 'slash', grade: 'heatwave', caption: 'Neon Coast', subtitle: 'Vice City Nights', quote: 'Neon nights, no regrets.', tags: ['Vice City', 'Est. 2026', 'Neon Coast'] },
-  { layout: 'nine', grade: 'sunset', caption: 'Sunset Strip', subtitle: 'Golden Hour', quote: 'Chasing the last light.', tags: ['Vice City', 'Golden Hour', 'Sunset Strip'] },
-  { layout: 'tilt', grade: 'neon', caption: 'Palm Royale', subtitle: 'Neon Nights', quote: 'Two friends. One city.', tags: ['Vice City', 'Neon Nights', 'Palm Royale'] },
-  { layout: 'strip', grade: 'palmwave', caption: 'Rooftop Kings', subtitle: 'Skyline Stories', quote: 'Above it all.', tags: ['Vice City', 'Est. 2026', 'Rooftop Kings'] },
-  { layout: 'classic', grade: 'gold', caption: 'Ocean Drive', subtitle: 'After Dark', quote: 'The city pays in gold.', tags: ['Vice City', 'Ocean Drive', 'Gold Rush'] },
-  { layout: 'duo', grade: 'noir', caption: 'Palm Noir', subtitle: 'Midnight Confidential', quote: 'Some stories stay buried.', tags: ['Vice City', 'Palm Noir', 'After Midnight'] },
+  { layout: "slash", grade: "heatwave", caption: "Neon Coast", subtitle: "Vice City Nights", quote: "Neon nights, no regrets.", tags: ["Vice City", "Est. 2026", "Neon Coast"], photos: [1, 2, 3, 0] },
+  { layout: "nine", grade: "sunset", caption: "Sunset Strip", subtitle: "Golden Hour", quote: "Chasing the last light.", tags: ["Vice City", "Golden Hour", "Sunset Strip"], photos: [1, 3, 2, 0, 1, 2, 3, 0, 1] },
+  { layout: "tilt", grade: "neon", caption: "Palm Royale", subtitle: "Neon Nights", quote: "Two friends. One city.", tags: ["Vice City", "Neon Nights", "Palm Royale"], photos: [2, 1, 3] },
+  { layout: "strip", grade: "palmwave", caption: "Rooftop Kings", subtitle: "Skyline Stories", quote: "Above it all.", tags: ["Vice City", "Est. 2026", "Rooftop Kings"], photos: [3, 1, 2, 0, 1] },
+  { layout: "classic", grade: "gold", caption: "Ocean Drive", subtitle: "After Dark", quote: "The city pays in gold.", tags: ["Vice City", "Ocean Drive", "Gold Rush"], photos: [0, 1, 2, 3] },
+  { layout: "duo", grade: "noir", caption: "Palm Noir", subtitle: "Midnight Confidential", quote: "Some stories stay buried.", tags: ["Vice City", "Palm Noir", "After Midnight"], photos: [3, 0] },
 ];
 
-document.getElementById('surprise-btn').addEventListener('click', () => {
-  recordHistory();
-  const pick = PRESETS[Math.floor(Math.random() * PRESETS.length)];
-  const deal = [...Array(library.length).keys()];
-  for (let i = deal.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [deal[i], deal[j]] = [deal[j], deal[i]];
-  }
-  Object.assign(state, JSON.parse(JSON.stringify(pick)));
-  state.panels = layoutById(state.layout).panels()
-    .map((_, i) => blankPlacement(deal[i % deal.length]));
-  state.selected = 0;
-  syncControls();
-  render();
+document.getElementById("surprise-btn").addEventListener("click", () => {
+  checkpoint();
+  const preset = PRESETS[Math.floor(Math.random() * PRESETS.length)];
+  state.layout = preset.layout;
+  state.grade = preset.grade;
+  state.caption = preset.caption;
+  state.subtitle = preset.subtitle;
+  state.quote = preset.quote;
+  state.tags = [...preset.tags];
+  const dealt = deal(preset.layout, preset.photos, null);
+  state.photos = dealt.photos;
+  state.views = dealt.views;
+  selected = 0;
+  armed = null;
+  syncAll();
+  paint();
 });
 
-// ------------------------------------------------------------- export
+// ---- export ------------------------------------------------------------
 
-function exportPng(w, h) {
-  const out = document.createElement('canvas');
-  out.width = w;
-  out.height = h;
-  drawCover(out.getContext('2d'), w, h, state, library);
-  out.toBlob((blob) => {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `neon-coast-cover-${w}x${h}.png`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-  }, 'image/png');
+function downloadPng(w, h) {
+  const off = document.createElement("canvas");
+  off.width = w;
+  off.height = h;
+  renderCover(off.getContext("2d"), w, h, images, state);
+  off.toBlob((blob) => {
+    if (!blob) return;
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "neon-coast-cover-" + w + "x" + h + ".png";
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 4000);
+  }, "image/png");
 }
-
-document.querySelectorAll('.export-btn').forEach((b) => {
-  b.addEventListener('click', () => exportPng(Number(b.dataset.w), Number(b.dataset.h)));
+document.querySelectorAll(".export-btn").forEach((btn) => {
+  btn.addEventListener("click", () => downloadPng(Number(btn.dataset.w), Number(btn.dataset.h)));
 });
-document.getElementById('export-all').addEventListener('click', () => {
-  EXPORT_SIZES.forEach((s, i) => setTimeout(() => exportPng(s.w, s.h), i * 350));
+document.getElementById("export-all").addEventListener("click", () => {
+  EXPORTS.forEach((size, i) => setTimeout(() => downloadPng(size.w, size.h), i * 350));
 });
 
-// ------------------------------------------------------------- control sync
+// ---- sync + boot ---------------------------------------------------------
 
-function syncControls() {
-  document.getElementById('caption').value = state.caption;
-  document.getElementById('subtitle').value = state.subtitle;
-  document.getElementById('quote').value = state.quote;
-  document.getElementById('tags').value = state.tags.join(' | ');
-  buildChoosers();
+function syncAll() {
+  document.getElementById("caption").value = state.caption;
+  document.getElementById("subtitle").value = state.subtitle;
+  document.getElementById("quote").value = state.quote;
+  document.getElementById("tags").value = state.tags.join(" | ");
+  fillChoosers();
+  fillStrip();
   syncPanelTools();
 }
 
-// ------------------------------------------------------------- boot
+function loadSample(name) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = "samples/" + name;
+  });
+}
 
 async function boot() {
   const shot = readShotRequest();
-  await Promise.all([
-    document.fonts.load('400 80px Anton'),
-    document.fonts.load('400 40px Pacifico'),
-    ...SAMPLE_FILES.map((name) => new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => { library.push(img); resolve(); };
-      img.onerror = () => resolve();
-      img.src = `samples/${name}`;
-    })),
+  const loaded = await Promise.all([
+    document.fonts.load("400 80px Anton"),
+    document.fonts.load("400 40px Pacifico"),
+    ...SAMPLES.map(loadSample),
   ]);
-  // Samples must sit in SAMPLE_FILES order whatever order they loaded in.
-  library.sort((a, b) => SAMPLE_FILES.indexOf(fileNameOf(a)) - SAMPLE_FILES.indexOf(fileNameOf(b)));
+  // Indexed assignment keeps the library in SAMPLES order no matter
+  // which file finished loading first.
+  loaded.slice(2).forEach((img, i) => { if (img) images[i] = img; });
 
   if (shot) {
-    Object.assign(state, shot.state);
-    if (shot.state.panels) state.panels = shot.state.panels;
-    else state.panels = dealPhotos(state.layout, null);
-    state.selected = 0;
-    if (shot.mode === 'cover') {
-      document.body.classList.add('shot-cover');
-      const size = shot.size || EXPORT_SIZES[2];
+    const merged = { ...state, ...shot.state };
+    const dealt = deal(merged.layout, shot.state.photos || null, shot.state.views || null);
+    for (const key of Object.keys(state)) delete state[key];
+    Object.assign(state, merged, dealt);
+    selected = 0;
+    if (shot.mode === "cover") {
+      document.body.classList.add("shot-cover");
+      const size = shot.size || EXPORTS[2];
       canvas.width = size.w;
       canvas.height = size.h;
-      render();
+      paint();
       publishShotPng(canvas);
       return;
     }
   }
-  buildPhotoStrip();
-  syncControls();
-  syncHistoryButtons();
-  render();
-}
-
-function fileNameOf(img) {
-  return decodeURIComponent(img.src.split('/').pop());
+  syncAll();
+  syncHistory();
+  paint();
 }
 
 boot();
