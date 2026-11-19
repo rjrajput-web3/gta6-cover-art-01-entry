@@ -1,4 +1,4 @@
-// Vice Cover Studio — the program that hands this entry in.
+// Neon Coast Cover Studio — the program that hands this entry in.
 //
 // It runs on Node 22 with only the standard library. Its whole job is to
 // gather the finished pieces and lay them out for the grader: copy the

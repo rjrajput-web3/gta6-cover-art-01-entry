@@ -3,22 +3,29 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vice Cover Studio — GTA-style cover art maker</title>
+<title>Neon Coast Cover Studio — GTA-style cover art maker</title>
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 <main class="app">
   <section class="controls">
-    <h1>Vice Cover Studio</h1>
-    <p class="tagline">Your photo + a caption, turned into a Vice City poster cover. Pick a photo, choose a layout and grade, export a PNG.</p>
+    <h1>Neon Coast Cover Studio</h1>
+    <p class="tagline">Your photo + a caption, turned into a Vice City poster cover. Eight layouts, six grades, poster furniture — export a PNG in one click.</p>
+
+    <div class="row toolbar">
+      <button id="surprise" type="button" class="primary">Surprise me</button>
+      <button id="undo" type="button" disabled>Undo</button>
+      <button id="redo" type="button" disabled>Redo</button>
+    </div>
 
     <fieldset>
       <legend>Photo</legend>
       <label>Photo for the selected panel <input id="photo" type="file" accept="image/*"></label>
       <div class="row">
         <button id="fillAll" type="button">Fill all panels</button>
-        <button id="useSamples" type="button">Use sample photos</button>
+        <button id="useSamples" type="button">Deal sample photos</button>
       </div>
+      <div id="library" class="library" aria-label="Sample photos"></div>
       <div id="panels" class="chips" aria-label="Panels"></div>
       <p id="panelNote" class="note"></p>
       <label>Zoom <input id="zoom" type="range" min="50" max="300" value="100"> <span id="zoomVal">100%</span></label>
@@ -29,14 +36,14 @@
         </select>
       </label>
       <label class="check"><input id="flip" type="checkbox"> Flip photo horizontally</label>
-      <p class="note">Tip: drag the photo on the preview to reposition it inside its panel.</p>
+      <p class="note">Tip: drag the photo on the preview to reposition it inside its panel, or tap a sample photo to put it in the selected panel.</p>
     </fieldset>
 
     <fieldset>
       <legend>Layout &amp; grade</legend>
       <label>Layout <select id="layout"></select></label>
       <label>Colour grade <select id="grade"></select></label>
-      <label>Grade intensity <input id="intensity" type="range" min="0" max="100" value="80"> <span id="intensityVal">80%</span></label>
+      <label>Grade intensity <input id="intensity" type="range" min="0" max="100" value="85"> <span id="intensityVal">85%</span></label>
       <label>Gutter colour <input id="gutterColor" type="color" value="#0d0714"></label>
       <label class="check"><input id="grain" type="checkbox" checked> Film grain</label>
       <label class="check"><input id="vignette" type="checkbox" checked> Vignette</label>
@@ -44,8 +51,10 @@
 
     <fieldset>
       <legend>Caption</legend>
-      <label>Title <input id="title" type="text" maxlength="40" value="Sunset Heist"></label>
-      <label>Subtitle <input id="subtitle" type="text" maxlength="40" value="Vice City Nights"></label>
+      <label>Title <input id="title" type="text" maxlength="40" value="Neon Coast"></label>
+      <label>Subtitle (neon script) <input id="subtitle" type="text" maxlength="40" value="Vice City Nights"></label>
+      <label>Quote line <input id="quote" type="text" maxlength="60" value="Neon nights, no regrets."></label>
+      <label>Tag chips (comma separated) <input id="tags" type="text" maxlength="60" value="Vice City, Est. 2026, Neon Coast"></label>
       <label>Position
         <select id="captionPos">
           <option value="bottom">Bottom</option>
@@ -56,11 +65,21 @@
     </fieldset>
 
     <fieldset>
+      <legend>Poster furniture</legend>
+      <label class="check"><input id="band" type="checkbox" checked> Title band with halftone dots</label>
+      <label class="check"><input id="starsToggle" type="checkbox" checked> Heat pill (five stars)</label>
+      <label class="check"><input id="sealToggle" type="checkbox" checked> Vice City seal</label>
+    </fieldset>
+
+    <fieldset>
       <legend>Export PNG</legend>
       <div class="row exports">
         <button type="button" data-export="1080x1080">1080 x 1080</button>
         <button type="button" data-export="1080x1350">1080 x 1350</button>
         <button type="button" data-export="1920x1080">1920 x 1080</button>
+      </div>
+      <div class="row">
+        <button id="exportAll" type="button" class="primary">Export all three sizes</button>
       </div>
     </fieldset>
     <p id="status" role="status"></p>
