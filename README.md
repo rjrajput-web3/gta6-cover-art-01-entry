@@ -6,6 +6,11 @@
 
 Neon Coast Cover Studio — a static offline web app that turns your photo and a caption into GTA 6-style poster cover art. Deal four different sample photos across the panels (or load your own), drag to reposition, zoom, flip, choose one of eight poster layouts — including slanted, tilted-snapshot and nine-panel grids — and one of six colour grades (Vice Sunset, Neon Nights, Palm Noir, Heatwave, Palmwave, Gold Rush) with film grain and vignette. Poster furniture finishes the art: a halftone title band, neon-script subtitle, five-star heat pill, Vice City seal and tag chips, plus a quote line, Surprise-me presets and undo/redo. Export a PNG in 1080x1080, 1080x1350 or 1920x1080 — or all three at once. Everything runs locally in the browser: photos never leave your machine, and the Anton poster font and Pacifico script font ship under app/fonts under the SIL Open Font License.
 
+## Fonts
+
+- **Anton** (poster title) — © 2020 The Anton Project Authors, SIL Open Font License 1.1. Font file `app/fonts/Anton-Regular.ttf`, license text `app/fonts/OFL.txt`.
+- **Pacifico** (script subtitle) — © 2018 The Pacifico Project Authors, SIL Open Font License 1.1. Font file `app/fonts/Pacifico-Regular.ttf`, license text `app/fonts/Pacifico-OFL.txt`.
+
 ## Run it
 
 ```sh
