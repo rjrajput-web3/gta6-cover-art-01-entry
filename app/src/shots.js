@@ -1,70 +1,68 @@
-// Fixed scenes for screenshots: ?shot=editor shows the page with sample
-// photos loaded; ?shot=cover shows the exported cover alone, drawn by the
-// app itself at the requested export size. `layout`, `grade`, `size`,
-// `caption`, `subtitle`, `quote`, `tags` and `photos` (comma list of sample
-// indexes, one per panel) come from the query. window.__shotReady is set
-// once painted. Every cover scene deals a different photo into each panel,
-// so no screenshot repeats the same face twice in a row.
-import { drawCover } from './cover.js';
+// Shot mode: the query string can preset the whole studio, which is how
+// the screenshots in shots.json are taken. `?shot=cover` fills the window
+// with one finished cover at the requested size; `?shot=editor` opens the
+// editor with the preset already applied. With no `shot` parameter the
+// studio starts normally and this module changes nothing.
 
-function applyScene(state, query) {
-  state.layout = query.get('layout') || state.layout;
-  state.grade = query.get('grade') || state.grade;
-  state.title = query.get('caption') || state.title;
-  state.subtitle = query.get('subtitle') || state.subtitle;
-  state.quote = query.get('quote') || state.quote;
-  if (query.get('tags')) state.tags = query.get('tags').split('|').map((t) => t.trim()).filter(Boolean);
-  state.captionPos = query.get('captionPos') || state.captionPos;
-  state.intensity = query.get('intensity') ? Number(query.get('intensity')) : state.intensity;
-  if (query.get('furniture')) {
-    const on = query.get('furniture') === 'on';
-    state.furniture = { band: on, stars: on, seal: on };
-  }
-  return query.get('photos') || '';
+function numberList(raw) {
+  if (!raw) return [];
+  return raw.split(',').map((part) => {
+    const n = Number(part);
+    return Number.isFinite(n) ? n : 0;
+  });
 }
 
-export async function runShot(shot, query, state, canvas, samples, loadImage, redraw) {
-  const photos = applyScene(state, query);
-  // Wait for both poster fonts so the lettering renders in the shot.
-  try {
-    await document.fonts.load('80px Anton');
-    await document.fonts.load('40px Pacifico');
-  } catch { /* fall back to sans */ }
-  // Deal photos into the panels: the query names sample indexes in order,
-  // otherwise the four samples are dealt round-robin.
-  const deal = photos
-    ? photos.split(',').map((n) => Number(n))
-    : [0, 1, 2, 3, 0, 1, 2, 3, 0];
-  const shifts = (query.get('ox') || '').split(',').map((n) => Number(n));
-  state.panels.forEach((p, i) => {
-    const idx = deal[i % deal.length];
-    p.img = samples[idx] || null;
-    p.zoom = 1;
-    p.ox = Number.isFinite(shifts[i]) ? shifts[i] : 0;
-    // Hero strips are wide, so shift tall portraits down to keep faces in
-    // frame; drawPanel clamps the offset so the photo always covers.
-    p.oy = i === 0 ? 0.55 : 0.25;
-    p.flip = false;
-    p.fit = 'cover';
-  });
-  if (shot === 'cover') {
-    document.body.classList.add('shot-cover');
-    const size = (query.get('size') || '1920x1080').split('x').map(Number);
-    canvas.width = size[0];
-    canvas.height = size[1];
-    drawCover(canvas, state, samples);
-  } else {
-    // Editor scene: the strip layout with four different photos visible.
-    drawCover(canvas, state, samples);
-    const title = document.getElementById('title');
-    if (title) title.value = state.title;
-    const subtitle = document.getElementById('subtitle');
-    if (subtitle) subtitle.value = state.subtitle;
-    const quote = document.getElementById('quote');
-    if (quote) quote.value = state.quote;
-    const tags = document.getElementById('tags');
-    if (tags) tags.value = state.tags.join(', ');
+function textList(raw) {
+  if (!raw) return [];
+  return raw.split('|').map((part) => part.trim()).filter(Boolean);
+}
+
+// Read the query string into a partial studio state. Returns null when
+// the page was opened without a shot request.
+export function readShotRequest() {
+  const q = new URLSearchParams(window.location.search);
+  const mode = q.get('shot');
+  if (mode !== 'cover' && mode !== 'editor') return null;
+
+  const shot = { mode, size: null, state: {} };
+  const sizeRaw = q.get('size');
+  if (sizeRaw) {
+    const [w, h] = sizeRaw.split('x').map((n) => Number(n));
+    if (w > 0 && h > 0) shot.size = { w, h };
   }
-  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-  window.__shotReady = true;
+  if (q.get('layout')) shot.state.layout = q.get('layout');
+  if (q.get('grade')) shot.state.grade = q.get('grade');
+  if (q.get('caption') !== null) shot.state.caption = q.get('caption');
+  if (q.get('subtitle') !== null) shot.state.subtitle = q.get('subtitle');
+  if (q.get('quote') !== null) shot.state.quote = q.get('quote');
+  const tags = textList(q.get('tags'));
+  if (tags.length) shot.state.tags = tags;
+
+  const photos = numberList(q.get('photos'));
+  const oxs = numberList(q.get('ox'));
+  const oys = numberList(q.get('oy'));
+  if (photos.length) {
+    shot.state.panels = photos.map((photo, i) => ({
+      photo,
+      ox: oxs[i] || 0,
+      oy: oys[i] || 0,
+      zoom: 1,
+      flip: false,
+    }));
+  }
+  return shot;
+}
+
+// In cover-shot mode the rendered PNG is published on the window and in a
+// data element, so a headless browser can lift the exact bytes the app
+// produced (and check that two runs agree byte for byte).
+export function publishShotPng(canvas) {
+  const url = canvas.toDataURL('image/png');
+  window.__SHOT_PNG__ = url;
+  const holder = document.createElement('pre');
+  holder.id = 'shot-data';
+  holder.hidden = true;
+  holder.textContent = url;
+  document.body.appendChild(holder);
+  document.body.dataset.shotReady = '1';
 }
