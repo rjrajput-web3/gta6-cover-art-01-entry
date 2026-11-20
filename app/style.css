@@ -1,32 +1,40 @@
-/* VICE HEAT - golden-hour editor theme. Dark dusk purple, amber sun, cream type. */
+/* VICE HEAT — Leonida Golden-Hour Cover Studio
+   Dark neon UI: deep violet ink, sunset pink + amber accents, Anton display type. */
 @font-face {
   font-family: 'Anton';
   src: url('fonts/Anton-Regular.ttf') format('truetype');
+  font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: 'Pacifico';
   src: url('fonts/Pacifico-Regular.ttf') format('truetype');
+  font-weight: 400;
   font-display: swap;
 }
 
 :root {
-  --dusk: #1d1033;
-  --plum: #2d1b4e;
-  --amber: #ffb347;
-  --orange: #ff6b35;
-  --pink: #ff2e63;
-  --cream: #fff3e0;
-  --cream-dim: #e8d9c8;
-  --line: rgba(255, 243, 224, 0.16);
+  --ink: #0b0612;
+  --ink-2: #160a24;
+  --ink-3: #221133;
+  --line: #3a2350;
+  --text: #f5eefc;
+  --muted: #b9a3cc;
+  --pink: #ff2e88;
+  --amber: #ff9a3d;
+  --teal: #0fb5a6;
+  --gold: #ffd76a;
 }
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  background: var(--dusk);
-  color: var(--cream);
+  background:
+    radial-gradient(1100px 500px at 85% -10%, rgba(255, 46, 136, 0.22), transparent 60%),
+    radial-gradient(900px 480px at -10% 0%, rgba(255, 154, 61, 0.16), transparent 55%),
+    var(--ink);
+  color: var(--text);
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
   min-height: 100vh;
 }
@@ -36,142 +44,189 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 12px 20px;
-  background: linear-gradient(90deg, #2d1b4e, #4a154b 55%, #7a1e3f);
-  border-bottom: 3px solid var(--amber);
-  flex-wrap: wrap;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(11, 6, 18, 0.8);
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 
 .brand { display: flex; align-items: center; gap: 12px; }
 .brand-mark {
   width: 46px; height: 46px;
   display: grid; place-items: center;
-  background: linear-gradient(135deg, var(--amber), var(--orange) 60%, var(--pink));
-  color: var(--dusk);
-  font-family: 'Anton', sans-serif;
+  font-family: Anton, sans-serif;
   font-size: 20px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--amber), var(--pink));
   border-radius: 10px;
-  letter-spacing: 1px;
+  box-shadow: 0 0 24px rgba(255, 46, 136, 0.45);
 }
 .brand h1 {
   margin: 0;
-  font-family: 'Anton', sans-serif;
+  font-family: Anton, sans-serif;
   font-size: 26px;
   letter-spacing: 3px;
-  color: var(--cream);
+  line-height: 1;
+  background: linear-gradient(90deg, #fff7d6, var(--amber) 45%, var(--pink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
-.brand p { margin: 0; font-size: 12px; color: var(--cream-dim); letter-spacing: 1px; }
+.brand p { margin: 2px 0 0; color: var(--muted); font-size: 13px; letter-spacing: 0.4px; }
 
-.top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.top-actions { display: flex; gap: 8px; }
 
 button, select, input[type="text"] {
   font: inherit;
-  color: var(--cream);
-  background: var(--plum);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 8px 12px;
-}
-button { cursor: pointer; }
-button:hover:not(:disabled) { border-color: var(--amber); }
-button:disabled { opacity: 0.45; cursor: default; }
-button.primary {
-  background: linear-gradient(135deg, var(--amber), var(--orange));
-  color: var(--dusk);
-  font-weight: 700;
-  border: none;
-}
-button.accent {
-  background: var(--pink);
-  border: none;
-  font-weight: 700;
+  color: var(--text);
 }
 
-.layout {
+button {
+  background: var(--ink-3);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 9px 14px;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--pink); }
+button:disabled { opacity: 0.4; cursor: default; }
+button.primary {
+  width: 100%;
+  background: linear-gradient(90deg, var(--amber), var(--pink));
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  padding: 12px;
+  box-shadow: 0 4px 22px rgba(255, 46, 136, 0.35);
+}
+
+.studio {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 16px;
-  padding: 16px 20px 28px;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 22px;
+  padding: 22px;
+  max-width: 1280px;
+  margin: 0 auto;
   align-items: start;
 }
 
-.stage {
-  background: var(--plum);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 16px;
-  display: grid;
-  justify-items: center;
-  gap: 10px;
-  position: sticky;
-  top: 12px;
-}
-#preview {
+.stage-wrap { text-align: center; }
+#stage {
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
-  background: #120a24;
-  cursor: grab;
-  touch-action: none;
-}
-#preview:active { cursor: grabbing; }
-.status { margin: 0; font-size: 13px; color: var(--cream-dim); text-align: center; }
-
-.toolbar { display: grid; gap: 12px; }
-.panel {
-  background: var(--plum);
+  border-radius: 14px;
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 12px 14px;
-  display: grid;
-  gap: 8px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55), 0 0 0 6px rgba(255, 46, 136, 0.06);
+  background: var(--ink-2);
+  touch-action: none;
+  cursor: grab;
 }
+#stage:active { cursor: grabbing; }
+.status { color: var(--gold); font-size: 13px; margin: 12px 0 4px; }
+.hint { color: var(--muted); font-size: 13px; margin: 0; }
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px;
+}
+.panel section { display: flex; flex-direction: column; gap: 10px; }
 .panel h2 {
   margin: 0;
-  font-family: 'Anton', sans-serif;
+  font-family: Anton, sans-serif;
   font-size: 15px;
   letter-spacing: 2px;
-  color: var(--amber);
+  color: var(--gold);
 }
-.panel label { display: grid; gap: 4px; font-size: 13px; }
-.panel label.check { display: flex; align-items: center; gap: 8px; }
-.panel input[type="checkbox"] { accent-color: var(--orange); width: 16px; height: 16px; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chips button { padding: 6px 10px; font-size: 13px; }
-.chips button.on {
-  background: linear-gradient(135deg, var(--amber), var(--orange));
-  color: var(--dusk);
-  border: none;
-  font-weight: 700;
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-row button { padding: 8px 11px; font-size: 13px; border-radius: 999px; }
+.chip-row button.active {
+  background: linear-gradient(90deg, var(--amber), var(--pink));
+  border-color: transparent;
+  color: #fff;
+}
+.chip-row button.swatch::before {
+  content: '';
+  display: inline-block;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  margin-right: 7px;
+  vertical-align: -1px;
+  background: linear-gradient(135deg, var(--sw1), var(--sw2));
+}
+
+.tray { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.thumb { position: relative; border-radius: 9px; overflow: hidden; cursor: pointer; border: 2px solid transparent; }
+.thumb:hover { border-color: var(--pink); }
+.thumb img { display: block; width: 100%; height: 64px; object-fit: cover; }
+.thumb span {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  font-size: 10px; text-align: center;
+  background: rgba(11, 6, 18, 0.75);
+  padding: 2px 0;
 }
 .upload {
-  display: inline-block;
-  padding: 8px 12px;
-  border: 1px dashed var(--amber);
-  border-radius: 8px;
-  cursor: pointer;
+  display: block;
   text-align: center;
-  font-weight: 600;
+  border: 1px dashed var(--line);
+  border-radius: 9px;
+  padding: 11px;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 13px;
 }
+.upload:hover { border-color: var(--pink); color: var(--text); }
 .upload input { display: none; }
-.hint, .fine { margin: 0; font-size: 12px; color: var(--cream-dim); line-height: 1.5; }
-input[type="range"] { accent-color: var(--orange); width: 100%; }
+.note { color: var(--muted); font-size: 12px; margin: 0; line-height: 1.5; }
+
+.panel label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); }
+.panel input[type="text"], .panel select {
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--text);
+}
+.panel input[type="text"]:focus, .panel select:focus { outline: 2px solid var(--pink); border-color: transparent; }
+.panel input[type="range"] { accent-color: var(--pink); }
+.heat-val { color: var(--gold); letter-spacing: 2px; font-size: 15px; }
+
+.export-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.export-row button { padding: 9px 4px; font-size: 13px; }
+
+.foot { max-width: 1280px; margin: 0 auto; padding: 0 22px 26px; color: var(--muted); font-size: 12px; line-height: 1.6; }
 
 @media (max-width: 900px) {
-  .layout { grid-template-columns: 1fr; }
-  .stage { position: static; }
+  .studio { grid-template-columns: 1fr; }
+  .topbar { flex-wrap: wrap; }
 }
 
-/* Screenshot modes: hide the editor chrome, paint edge to edge. */
-body.shot-cover .topbar,
-body.shot-cover #toolbar,
-body.shot-cover .status { display: none; }
-body.shot-cover .layout { display: block; padding: 0; }
-body.shot-cover .stage {
+/* Shot mode (?shot=cover / ?shot=editor): the screenshot is the cover alone,
+   full-bleed in the viewport — no header, side panel or footer. */
+body.shot-mode { background: var(--ink); }
+body.shot-mode .topbar,
+body.shot-mode .panel,
+body.shot-mode .foot,
+body.shot-mode .status,
+body.shot-mode .hint { display: none; }
+body.shot-mode .studio {
+  display: block;
   padding: 0;
+  margin: 0;
+  max-width: none;
+}
+body.shot-mode .stage-wrap { text-align: left; }
+body.shot-mode #stage {
+  display: block;
   border: none;
   border-radius: 0;
-  background: transparent;
-  position: static;
+  box-shadow: none;
+  max-width: none;
 }
-body.shot-cover #preview { border-radius: 0; display: block; }
