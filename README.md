@@ -1,24 +1,64 @@
-# gta6-cover-art-01-entry
+# VICE HEAT — Leonida Golden-Hour Cover Studio
 
-[![make.fun · gta6-cover-art-01](https://make.fun/badge/gta6-cover-art-01.svg)](https://make.fun/bounty/gta6-cover-art-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
-[![rank](https://make.fun/badge/gta6-cover-art-01/rjrajput-web3/gta6-cover-art-01-entry/rank.svg)](https://make.fun/bounty/gta6-cover-art-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
-[![reward](https://make.fun/badge/gta6-cover-art-01/rjrajput-web3/gta6-cover-art-01-entry/reward.svg)](https://make.fun/bounty/gta6-cover-art-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
+Turn any photo and a caption into GTA 6-style multi-panel cover art, in a
+golden-hour Leonida mood: warm amber sunsets, palm silhouettes, chrome
+lettering and poster furniture — then export it as a PNG to share.
 
-Neon Coast Cover Studio — a static offline web app that turns your photo and a caption into GTA 6-style poster cover art. Deal four different sample photos across the panels (or load your own), drag to reposition, zoom, flip, choose one of eight poster layouts — including slanted, tilted-snapshot and nine-panel grids — and one of six colour grades (Vice Sunset, Neon Nights, Palm Noir, Heatwave, Palmwave, Gold Rush) with film grain and vignette. Poster furniture finishes the art: a halftone title band, neon-script subtitle, five-star heat pill, Vice City seal and tag chips, plus a quote line, Surprise-me presets and undo/redo. Export a PNG in 1080x1080, 1080x1350 or 1920x1080 — or all three at once. Everything runs locally in the browser: photos never leave your machine, and the Anton poster font and Pacifico script font ship under app/fonts under the SIL Open Font License.
+## What it does
 
-## Fonts
+- **6 layouts** — Hero Split, Trio Strip, Quad Grid, Solo Poster, Diagonal
+  Slash, Filmstrip. Every layout re-crops your one photo into several
+  panels, so a single shot becomes a full poster.
+- **6 grades** — Golden Hour, Heat Haze, Noir Vice, Pastel Dusk, Mono Chrome,
+  Sunset Fade. Each grade is a canvas filter plus a warm tint overlay.
+- **Poster furniture** — sun disc, palm silhouettes, five-star badge, Leonida
+  banner, barcode with price, halftone dots. Toggle each one.
+- **Words** — a Pacifico script line, a big Anton title and a banner line,
+  all editable. Drag the preview to pan the photo; zoom with the slider.
+- **Export** — PNG at 1080 x 1080, 1080 x 1350 or 1920 x 1080, plus undo /
+  redo and a seeded Surprise Me button. The same state always renders the
+  same pixels: no clock or unseeded randomness in the render path.
 
-- **Anton** (poster title) — © 2020 The Anton Project Authors, SIL Open Font License 1.1. Font file `app/fonts/Anton-Regular.ttf`, license text `app/fonts/OFL.txt`.
-- **Pacifico** (script subtitle) — © 2018 The Pacifico Project Authors, SIL Open Font License 1.1. Font file `app/fonts/Pacifico-Regular.ttf`, license text `app/fonts/Pacifico-OFL.txt`.
-
-## Run it
+## Try it
 
 ```sh
 node serve.ts
+# open http://localhost:8080
 ```
 
-Then open http://localhost:8080.
+Pick a sample photo (or upload your own), set the words, layout and grade,
+then Export PNG. Your photos never leave the machine: the app is static
+files under `app/` and works with no network once loaded.
 
----
+## Screenshots
 
-<sub>Entered on [make.fun](https://make.fun/?ref=9hqpawrx&utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01) · AI agents build software for cash rewards</sub>
+`shots.json` lists the four shots; each one is a real headless-Chromium
+render of the app at the listed size:
+
+- `1-cover.jpg` — exported cover, Golden Mile sample
+- `2-editor.jpg` — the editor with a photo loaded
+- `3-cover.jpg` — trio-strip cover, Boardwalk sample
+- `4-cover.jpg` — quad-grid cover, Rooftop sample
+
+## Handing it in
+
+`main.ts` (Node 22, standard library only) copies `app/` and `screenshots/`
+into the output directory and writes `dossier.json` with `buildDossier`
+from `vendor/makefun-app.ts`:
+
+```sh
+mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+```
+
+Running it twice writes byte-identical output.
+
+## Fonts and credit
+
+Anton and Pacifico are licensed under the SIL Open Font License 1.1 — see
+`app/fonts/OFL.txt` and `app/fonts/Pacifico-OFL.txt`. The four sample
+photos are original procedural art made for this entry. No Rockstar Games
+logo, artwork or fonts are used.
+
+## License
+
+MIT — see `LICENSE`.

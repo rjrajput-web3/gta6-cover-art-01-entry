@@ -1,91 +1,92 @@
-// Shot presets for Neon Coast Cover Studio.
-//
-// A screenshot run opens the studio with a query string instead of a
-// person at the controls. Two modes are recognised:
-//
-//   ?shot=cover   one finished cover fills the window at &size=WxH
-//   ?shot=editor  the normal editor, with the preset already applied
-//
-// Everything else (layout, grade, photos, ox, oy, zoom, flip, caption,
-// subtitle, quote, tags) is optional and overrides the matching piece
-// of the studio state, so a shot is fully described by its URL and two
-// runs of the same URL paint the identical cover. With no shot
-// parameter this module returns null and changes nothing.
+// VICE HEAT - shot driver for screenshots.
+// Reads ?shot=cover|editor&photo=<sample>&caption=<text>&layout=<id>&grade=<id>
+// and renders that exact scene, then marks the page ready. Cover shots paint
+// straight onto the preview canvas at viewport size with a fixed seed, so a
+// re-run paints the same pixels.
 
-function parseInts(raw) {
-  if (!raw) return [];
-  return raw.split(",").map((part) => {
-    const n = parseInt(part, 10);
-    return Number.isFinite(n) ? n : 0;
+import { SIZES, defaultState, drawCover } from './cover.js';
+
+const params = new URLSearchParams(location.search);
+const mode = params.get('shot') || 'cover';
+
+function stateFromParams() {
+  const s = defaultState();
+  if (params.get('caption')) s.caption = params.get('caption');
+  if (params.get('script')) s.script = params.get('script');
+  if (params.get('sub')) s.sub = params.get('sub');
+  if (params.get('layout')) s.layout = params.get('layout');
+  if (params.get('grade')) s.grade = params.get('grade');
+  if (params.get('size') && SIZES[params.get('size')]) s.size = params.get('size');
+  s.seed = 7;
+  s.pan = { x: 0, y: 0 };
+  s.zoom = 1;
+  return s;
+}
+
+async function loadFonts() {
+  try {
+    await Promise.all([document.fonts.load('80px Anton'), document.fonts.load('40px Pacifico')]);
+    await document.fonts.ready;
+  } catch (err) {
+    // Fall back to sans-serif if a local font fails to load.
+  }
+}
+
+function loadPhoto(id) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = `samples/${id}.jpg`;
   });
 }
 
-function parseFloats(raw) {
-  if (!raw) return [];
-  return raw.split(",").map((part) => {
-    const n = Number(part);
-    return Number.isFinite(n) ? n : 0;
-  });
+async function coverShot() {
+  document.body.classList.add('shot-cover');
+  const state = stateFromParams();
+  const size = SIZES[state.size];
+  const canvas = document.querySelector('#preview');
+  // Viewport is set to the shot size by the screenshot tool; paint at the
+  // export size when the viewport matches it, else at viewport size.
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const W = vw === size.w && vh === size.h ? size.w : vw;
+  const H = vw === size.w && vh === size.h ? size.h : vh;
+  canvas.width = W;
+  canvas.height = H;
+  canvas.style.width = `${W}px`;
+  canvas.style.height = `${H}px`;
+  await loadFonts();
+  const img = await loadPhoto(params.get('photo') || state.sample);
+  drawCover(canvas.getContext('2d'), W, H, img, state);
+  canvas.dataset.ready = '1';
+  document.documentElement.dataset.ready = '1';
 }
 
-function parseTags(raw) {
-  if (!raw) return [];
-  return raw.split("|").map((t) => t.trim()).filter((t) => t.length > 0);
+async function editorShot() {
+  document.body.classList.add('shot-editor');
+  const mod = await import('./main.js');
+  const vh = window.__viceHeat;
+  const state = stateFromParams();
+  vh.state.caption = state.caption;
+  vh.state.script = state.script;
+  vh.state.sub = state.sub;
+  vh.state.layout = state.layout;
+  vh.state.grade = state.grade;
+  vh.state.size = state.size;
+  // Keep the visible controls in step with the shot's state.
+  document.querySelector('#captionInput').value = state.caption;
+  document.querySelector('#scriptInput').value = state.script;
+  document.querySelector('#subInput').value = state.sub;
+  document.querySelector('#sizeSelect').value = state.size;
+  await loadFonts();
+  await vh.loadSample(params.get('photo') || state.sample);
+  vh.render();
+  document.documentElement.dataset.ready = '1';
 }
 
-// Read the current query string. Returns null for a normal visit, or
-// { mode, size, state } where state is a partial renderCover state:
-// text fields plus a photos array and a parallel views array.
-export function readShotRequest() {
-  const q = new URLSearchParams(window.location.search);
-  const mode = q.get("shot");
-  if (mode !== "cover" && mode !== "editor") return null;
-
-  const state = {};
-  if (q.get("layout")) state.layout = q.get("layout");
-  if (q.get("grade")) state.grade = q.get("grade");
-  for (const key of ["caption", "subtitle", "quote"]) {
-    if (q.has(key)) state[key] = q.get(key);
-  }
-  const tags = parseTags(q.get("tags"));
-  if (tags.length) state.tags = tags;
-
-  const photos = parseInts(q.get("photos"));
-  if (photos.length) {
-    const oxs = parseFloats(q.get("ox"));
-    const oys = parseFloats(q.get("oy"));
-    const zooms = parseFloats(q.get("zoom"));
-    const flips = q.get("flip") ? q.get("flip").split(",") : [];
-    state.photos = photos;
-    state.views = photos.map((_, i) => ({
-      ox: oxs[i] || 0,
-      oy: oys[i] || 0,
-      zoom: zooms[i] > 0 ? zooms[i] : 1,
-      flip: flips[i] === "1" || flips[i] === "true",
-    }));
-  }
-
-  let size = null;
-  const rawSize = q.get("size");
-  if (rawSize) {
-    const parts = rawSize.split("x");
-    const w = Number(parts[0]);
-    const h = Number(parts[1]);
-    if (w > 0 && h > 0) size = { w, h };
-  }
-  return { mode, size, state };
-}
-
-// Publish a finished cover shot for the headless capture step: the PNG
-// data URL goes on the window, into a hidden element, and a ready flag
-// lands on <body> so the capturer knows the paint has settled.
-export function publishShotPng(canvas) {
-  const url = canvas.toDataURL("image/png");
-  window.__SHOT_PNG__ = url;
-  const holder = document.createElement("pre");
-  holder.id = "shot-data";
-  holder.hidden = true;
-  holder.textContent = url;
-  document.body.appendChild(holder);
-  document.body.dataset.shotReady = "1";
+if (mode === 'editor') {
+  editorShot();
+} else {
+  coverShot();
 }

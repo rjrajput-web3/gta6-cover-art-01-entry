@@ -3,82 +3,97 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Neon Coast Cover Studio</title>
+<title>VICE HEAT — Leonida Golden-Hour Cover Studio</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="topbar">
   <div class="brand">
-    <span class="brand-mark" aria-hidden="true">NC</span>
+    <span class="brand-mark">VH</span>
     <div>
-      <h1>Neon Coast Cover Studio</h1>
-      <p class="tagline">Build a sun-soaked game cover from your own photos.</p>
+      <h1>VICE HEAT</h1>
+      <p>Leonida Golden-Hour Cover Studio</p>
     </div>
   </div>
-  <div class="history">
-    <button type="button" id="undo-btn" disabled>Undo</button>
-    <button type="button" id="redo-btn" disabled>Redo</button>
-    <button type="button" id="surprise-btn" class="accent">Surprise me</button>
+  <div class="top-actions">
+    <button id="undoBtn" type="button" disabled>Undo</button>
+    <button id="redoBtn" type="button" disabled>Redo</button>
+    <button id="surpriseBtn" type="button" class="accent">Surprise me</button>
+    <button id="exportBtn" type="button" class="primary">Export PNG</button>
   </div>
 </header>
 
-<main class="workspace">
-  <section class="stage" aria-label="Cover preview">
-    <canvas id="poster" width="1080" height="1350"></canvas>
-    <p class="hint">Click a panel to select it, then drag its photo to reframe.</p>
+<main class="layout">
+  <section id="stage" class="stage">
+    <canvas id="preview" width="640" height="640"></canvas>
+    <p id="status" class="status" role="status">Loading your cover…</p>
   </section>
 
-  <aside class="controls">
+  <aside id="toolbar" class="toolbar">
     <section class="panel">
-      <h2>Photos</h2>
-      <div id="photo-strip" class="strip"></div>
+      <h2>1 · Your photo</h2>
+      <div id="sampleBox" class="chips"></div>
       <label class="upload">
-        <span>Add your own photos</span>
-        <input type="file" id="photo-input" accept="image/*" multiple>
+        Upload a photo
+        <input id="uploadInput" type="file" accept="image/*">
+      </label>
+      <p class="hint">Your photo never leaves this machine. Drag the preview to pan it.</p>
+    </section>
+
+    <section class="panel">
+      <h2>2 · Words</h2>
+      <label>Script line <input id="scriptInput" type="text" value="welcome to" maxlength="24"></label>
+      <label>Title <input id="captionInput" type="text" value="VICE HEAT" maxlength="18"></label>
+      <label>Banner <input id="subInput" type="text" value="LEONIDA" maxlength="18"></label>
+    </section>
+
+    <section class="panel">
+      <h2>3 · Layout</h2>
+      <div id="layoutBox" class="chips"></div>
+    </section>
+
+    <section class="panel">
+      <h2>4 · Grade</h2>
+      <div id="gradeBox" class="chips"></div>
+    </section>
+
+    <section class="panel">
+      <h2>5 · Poster furniture</h2>
+      <label class="check"><input type="checkbox" data-furniture="sun" checked> Sun disc</label>
+      <label class="check"><input type="checkbox" data-furniture="palms" checked> Palm silhouettes</label>
+      <label class="check"><input type="checkbox" data-furniture="stars" checked> Five-star badge</label>
+      <label class="check"><input type="checkbox" data-furniture="banner" checked> Leonida banner</label>
+      <label class="check"><input type="checkbox" data-furniture="barcode" checked> Barcode + price</label>
+      <label class="check"><input type="checkbox" data-furniture="halftone" checked> Halftone dots</label>
+    </section>
+
+    <section class="panel">
+      <h2>6 · Size &amp; zoom</h2>
+      <label>Export size
+        <select id="sizeSelect">
+          <option value="square">Square 1080 x 1080</option>
+          <option value="portrait">Portrait 1080 x 1350</option>
+          <option value="wide">Wide 1920 x 1080</option>
+        </select>
+      </label>
+      <label>Zoom <span id="zoomVal">1.00x</span>
+        <input id="zoomRange" type="range" min="1" max="2.5" step="0.05" value="1">
       </label>
     </section>
 
-    <section class="panel">
-      <h2>Layout</h2>
-      <div id="layout-grid" class="chips"></div>
-      <h2>Colour grade</h2>
-      <div id="grade-grid" class="chips"></div>
-    </section>
-
-    <section class="panel">
-      <h2>Words</h2>
-      <label>Title <input type="text" id="caption" maxlength="40"></label>
-      <label>Subtitle <input type="text" id="subtitle" maxlength="48"></label>
-      <label>Quote <input type="text" id="quote" maxlength="64"></label>
-      <label>Tags <span class="note">separated by |</span>
-        <input type="text" id="tags" maxlength="80"></label>
-    </section>
-
-    <section class="panel">
-      <h2 id="panel-label">Panel 1</h2>
-      <label>Zoom
-        <input type="range" id="zoom" min="1" max="3" step="0.01" value="1">
-      </label>
-      <div class="row">
-        <button type="button" id="flip-btn">Flip photo</button>
-        <button type="button" id="center-btn">Centre photo</button>
-      </div>
-    </section>
-
-    <section class="panel">
-      <h2>Export PNG</h2>
-      <div class="row wrap">
-        <button type="button" class="export-btn" data-w="1080" data-h="1080">1080 × 1080</button>
-        <button type="button" class="export-btn" data-w="1080" data-h="1350">1080 × 1350</button>
-        <button type="button" class="export-btn" data-w="1920" data-h="1080">1920 × 1080</button>
-        <button type="button" id="export-all" class="accent">Export all</button>
-      </div>
-    </section>
+    <p class="fine">VICE HEAT is an original cover maker. Anton and Pacifico are
+    licensed under the SIL Open Font License 1.1 — see app/fonts. No Rockstar
+    artwork, logos or fonts are used. Works fully offline.</p>
   </aside>
 </main>
 
-<script type="module" src="src/cover.js"></script>
-<script type="module" src="src/shots.js"></script>
-<script type="module" src="src/main.js"></script>
+<script type="module">
+  const params = new URLSearchParams(location.search);
+  if (params.has('shot')) {
+    await import('./src/shots.js');
+  } else {
+    await import('./src/main.js');
+  }
+</script>
 </body>
 </html>
