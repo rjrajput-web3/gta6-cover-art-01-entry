@@ -1,1 +1,15 @@
-{"type":"module"}
+{
+  "name": "vice-heat-cover-studio",
+  "version": "1.0.0",
+  "description": "VICE HEAT — Leonida Golden-Hour Cover Studio, a GTA VI cover maker",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node serve.ts",
+    "shots": "node main.ts",
+    "dossier": "node main.ts"
+  }
+}
