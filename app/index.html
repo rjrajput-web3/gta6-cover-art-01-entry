@@ -1,92 +1,97 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>VICE HEAT — Leonida Golden-Hour Cover Studio</title>
-<link rel="stylesheet" href="style.css">
+<meta name="description" content="Turn your photos and a caption into GTA 6-style cover art, offline in your browser.">
+<link rel="stylesheet" href="./style.css">
 </head>
 <body>
 <header class="topbar">
   <div class="brand">
-    <span class="brand-mark">VH</span>
+    <span class="brand-mark">VI</span>
     <div>
       <h1>VICE HEAT</h1>
       <p>Leonida Golden-Hour Cover Studio</p>
     </div>
   </div>
   <div class="top-actions">
-    <button id="shuffle" type="button" title="Try a random layout + grade">Shuffle look</button>
-    <button id="undo" type="button" disabled>Undo</button>
-    <button id="redo" type="button" disabled>Redo</button>
+    <button id="undo" type="button" title="Undo (Ctrl+Z)">Undo</button>
+    <button id="redo" type="button" title="Redo (Ctrl+Y)">Redo</button>
+    <button id="surprise" type="button" class="accent" title="Random layout + grade (S)">Surprise Me</button>
+    <button id="reset" type="button" title="Back to the Vice Heat look">Reset</button>
   </div>
 </header>
-
-<main class="studio">
-  <section class="stage-wrap">
-    <canvas id="stage" width="760" height="760" aria-label="Cover preview"></canvas>
-    <p id="status" class="status" aria-live="polite"></p>
-    <p class="hint">Drag the cover to pan the lead photo · Scroll to zoom · Click a photo below to lead with it</p>
+<main class="app">
+  <section class="stage">
+    <canvas id="cover" width="1080" height="1080" aria-label="Your cover art"></canvas>
+    <p class="hint">Drag a panel to pan it · Scroll over a panel to zoom · Arrow keys nudge the active panel · Click a panel to select it</p>
   </section>
-
-  <aside class="panel">
-    <section>
-      <h2>1 · Layout</h2>
-      <div id="layouts" class="chip-row"></div>
+  <aside class="controls" aria-label="Cover controls">
+    <section class="group">
+      <h2>Photos</h2>
+      <p class="group-note">Four panels, four photos. Pick a sample or upload your own for each panel.</p>
+      <div id="photos"></div>
     </section>
-
-    <section>
-      <h2>2 · Grade</h2>
-      <div id="grades" class="chip-row"></div>
+    <section class="group">
+      <h2>Layout <span class="keys">keys 1–0</span></h2>
+      <div id="layouts" class="chip-grid"></div>
     </section>
-
-    <section>
-      <h2>3 · Photos</h2>
-      <div id="tray" class="tray"></div>
-      <label class="upload">
-        Add your photos
-        <input id="upload" type="file" accept="image/*" multiple>
-      </label>
-      <p class="note">Photos never leave this page. Everything runs offline in your browser.</p>
+    <section class="group">
+      <h2>Grade <span class="keys">key G cycles</span></h2>
+      <div id="grades" class="swatch-grid"></div>
     </section>
-
-    <section>
-      <h2>4 · Caption</h2>
+    <section class="group">
+      <h2>Looks</h2>
+      <div id="presets" class="chip-grid"></div>
+    </section>
+    <section class="group">
+      <h2>Words</h2>
       <label>Title
-        <input id="title" type="text" value="VICE HEAT" maxlength="24" autocomplete="off">
+        <input id="title" type="text" maxlength="24" value="VICE HEAT" autocomplete="off">
       </label>
-      <label>Script subtitle
-        <input id="subtitle" type="text" value="welcome to leonida" maxlength="40" autocomplete="off">
+      <label>Subtitle
+        <input id="subtitle" type="text" maxlength="40" value="Leonida Nights" autocomplete="off">
       </label>
-      <label>Badge
-        <input id="badge" type="text" value="LEONIDA" maxlength="12" autocomplete="off">
+      <label>Subtitle style
+        <select id="subtitleStyle">
+          <option value="script">Script (Pacifico)</option>
+          <option value="caps">Caps (Anton)</option>
+          <option value="condensed">Condensed (Anton)</option>
+        </select>
       </label>
-      <label>Heat
-        <input id="heat" type="range" min="1" max="5" step="1" value="5">
-        <span id="heat-val" class="heat-val">★★★★★</span>
+      <label>Title size
+        <span class="slider-row">
+          <input id="titleSize" type="range" min="0.6" max="1.4" step="0.05" value="1">
+          <output id="titleSizeOut">100%</output>
+        </span>
+      </label>
+      <label>Letter spacing
+        <span class="slider-row">
+          <input id="letterSpacing" type="range" min="0" max="0.3" step="0.01" value="0.08">
+          <output id="letterSpacingOut">8%</output>
+        </span>
       </label>
     </section>
-
-    <section>
-      <h2>5 · Export</h2>
-      <label>Preview size
-        <select id="size"></select>
-      </label>
-      <div class="export-row">
-        <button type="button" data-export="square">1080×1080</button>
-        <button type="button" data-export="portrait">1080×1350</button>
-        <button type="button" data-export="wide">1920×1080</button>
-      </div>
-      <button id="export-all" type="button" class="primary">Export all three PNGs</button>
+    <section class="group">
+      <h2>Poster furniture</h2>
+      <div id="furniture" class="check-grid"></div>
     </section>
+    <section class="group">
+      <h2>Export <span class="keys">key E</span></h2>
+      <label>Size
+        <select id="exportSize"></select>
+      </label>
+      <label>Seed
+        <input id="seed" type="number" value="20261121" step="1">
+      </label>
+      <button id="export" type="button" class="accent big">Export PNG</button>
+      <p id="status" role="status"></p>
+    </section>
+    <p class="foot">Fully offline — your photos never leave this machine. Shortcuts: 1–0 layouts · G grade · S surprise · E export · Ctrl+Z / Ctrl+Y undo &amp; redo.</p>
   </aside>
 </main>
-
-<footer class="foot">
-  <p>VICE HEAT is an original fan-made cover tool. Not affiliated with Rockstar Games. No official artwork, logos or fonts are used — lettering is Anton &amp; Pacifico under the SIL Open Font License.</p>
-</footer>
-
-<script type="module" src="src/main.js"></script>
-<script type="module" src="src/shots.js"></script>
+<script type="module" src="./src/main.js"></script>
 </body>
 </html>

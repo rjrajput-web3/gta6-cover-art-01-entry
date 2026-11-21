@@ -1,49 +1,81 @@
-// VICE HEAT — tiny static server for local development only.
-// Serves app/ at http://localhost:8080. Node 22, standard library only.
+// VICE HEAT — a tiny static server for the app/ folder, for local use only.
+// Node 22, standard library only. It serves app/index.html and friends on
+// http://localhost:8080 so the cover studio can be tried in a desktop
+// browser with no build step:
+//
+//   node serve.ts [--port 8080]
+//
+// It answers only files inside app/, sends the MIME type each kind needs,
+// and refuses anything that would walk outside the folder.
 
+import { createReadStream, statSync } from 'node:fs';
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { join, extname } from 'node:path';
+import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const here = fileURLToPath(new URL('.', import.meta.url));
-const root = join(here, 'app');
-const port = Number(process.env.PORT || 8080);
+const appRoot = resolve(fileURLToPath(new URL('./app', import.meta.url)));
+
+const argv = process.argv.slice(2);
+const portFlag = argv.indexOf('--port');
+const wanted = portFlag === -1 ? 8080 : Number(argv[portFlag + 1]);
+const port = Number.isInteger(wanted) && wanted > 0 && wanted < 65536 ? wanted : 8080;
 
 const TYPES = {
-  '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.mjs': 'text/javascript; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.jpg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.html': 'text/html; charset=utf-8',
+  '.ico': 'image/x-icon',
   '.jpeg': 'image/jpeg',
+  '.jpg': 'image/jpeg',
+  '.js': 'text/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
+  '.mp3': 'audio/mpeg',
+  '.ogg': 'audio/ogg',
+  '.otf': 'font/otf',
   '.png': 'image/png',
+  '.svg': 'image/svg+xml',
   '.ttf': 'font/ttf',
   '.txt': 'text/plain; charset=utf-8',
+  '.wasm': 'application/wasm',
+  '.wav': 'audio/wav',
+  '.webp': 'image/webp',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
 };
 
-const server = createServer(async (req, res) => {
+const server = createServer((request, response) => {
+  const url = new URL(request.url ?? '/', 'http://localhost');
+  let path = '/';
   try {
-    const url = new URL(req.url || '/', 'http://localhost');
-    let path = decodeURIComponent(url.pathname);
-    if (path === '/') path = '/index.html';
-    const file = join(root, path);
-    if (!file.startsWith(root) || !existsSync(file)) {
-      res.writeHead(404, { 'content-type': 'text/plain' });
-      res.end('not found');
-      return;
-    }
-    const body = await readFile(file);
-    res.writeHead(200, { 'content-type': TYPES[extname(file)] || 'application/octet-stream' });
-    res.end(body);
-  } catch (err) {
-    res.writeHead(500, { 'content-type': 'text/plain' });
-    res.end(String(err));
+    path = decodeURIComponent(url.pathname);
+  } catch {
+    response.writeHead(400).end('bad request');
+    return;
   }
+  if (path.endsWith('/')) path += 'index.html';
+  const file = resolve(join(appRoot, normalize(path)));
+  if (file !== appRoot && !file.startsWith(appRoot + sep)) {
+    response.writeHead(403).end('forbidden');
+    return;
+  }
+  let bytes = 0;
+  try {
+    const info = statSync(file);
+    if (!info.isFile()) throw new Error('not a file');
+    bytes = info.size;
+  } catch {
+    response.writeHead(404).end('not found');
+    return;
+  }
+  response.writeHead(200, {
+    'cache-control': 'no-store',
+    'content-length': bytes,
+    'content-type': TYPES[extname(file).toLowerCase()] ?? 'application/octet-stream',
+  });
+  createReadStream(file).pipe(response);
 });
 
-server.listen(port, () => {
-  console.log(`VICE HEAT studio at http://localhost:${port}`);
+server.listen(port, '127.0.0.1', () => {
+  console.log(`VICE HEAT is on http://localhost:${port}`);
 });

@@ -1,60 +1,76 @@
+[![make.fun](https://make.fun/badge/gta6-cover-art-01.svg)](https://make.fun/bounty/gta6-cover-art-01)
+[![rank](https://make.fun/badge/gta6-cover-art-01/rjrajput-web3/gta6-cover-art-01-entry/rank.svg)](https://make.fun/bounty/gta6-cover-art-01)
+[![reward](https://make.fun/badge/gta6-cover-art-01/rjrajput-web3/gta6-cover-art-01-entry/reward.svg)](https://make.fun/bounty/gta6-cover-art-01)
+
 # VICE HEAT — Leonida Golden-Hour Cover Studio
 
-[![make.fun · gta6-cover-art-01](https://make.fun/badge/gta6-cover-art-01.svg)](https://make.fun/bounty/gta6-cover-art-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
-[![rank](https://make.fun/badge/gta6-cover-art-01/rjrajput-web3/gta6-cover-art-01-entry/rank.svg)](https://make.fun/bounty/gta6-cover-art-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
-[![reward](https://make.fun/badge/gta6-cover-art-01/rjrajput-web3/gta6-cover-art-01-entry/reward.svg)](https://make.fun/bounty/gta6-cover-art-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
+An offline browser app that turns your photos and a caption into GTA 6-style
+cover art: the multi-panel Leonida poster look with a Vice City golden-hour
+grade, bold Anton lettering, a Pacifico script subtitle, and poster furniture
+(synthwave sun, palms, five-star badge, Leonida banner, skyline, barcode and
+price). Built for the [Make GTA 6 Cover Art](https://make.fun/bounty/gta6-cover-art-01)
+competition on make.fun.
 
-VICE HEAT turns your photos into GTA VI poster-style cover art: multi-panel
-layouts, bold Anton lettering with a neon Pacifico script subtitle, a heat
-rating, a badge ribbon and a golden-hour sunset or neon colour grade. Pick a
-layout and a grade, drag the lead photo to crop it, scroll to zoom, type a
-caption, and export the cover as a PNG in Square, Portrait or Wide post sizes.
+## What it does
 
-Built for the [gta6-cover-art-01 bounty](https://make.fun/bounty/gta6-cover-art-01)
-on make.fun. The app runs entirely offline in a desktop browser from its own
-static files — your photos never leave the machine.
+- **10 layouts** — Classic Grid, Hero Duo, Center Poster, Bottom Heavy,
+  Magazine Spread, Duotone Split, Triptych, Big Sun, Diagonal Bands and
+  Frame Story. Every layout is a real arrangement of photo panels, not a
+  filter over one picture.
+- **9 colour grades** — Golden Hour, Vice Neon, Sunset Heat, Duotone Pink,
+  Teal Dusk, Noir, Palm Noir, Pastel Pop and Mono Gold.
+- **6 photo treatments per panel** — Warm, Cool, Mono, Punch, Pastel and
+  Noir, plus drag-to-pan and scroll-to-zoom on any panel.
+- **5 named looks** — Vice Heat, Neon Nights, Golden Hour, Noir Drive and
+  Pastel Vice: one-click presets that set layout, grade, words and
+  furniture together.
+- **Typography controls** — title and subtitle text, title size, letter
+  spacing, and three subtitle styles (script, caps, condensed).
+- **Poster furniture** — synthwave sun disc, palm silhouettes, five-star
+  badge, Leonida banner, skyline, halftone dots, M rating box, barcode with
+  $6.99 price, and a vignette. Each toggles on and off.
+- **Fast workflow** — seeded Surprise Me, full undo/redo, keyboard
+  shortcuts (1–0 layouts, G grade, S surprise, E export, Ctrl+Z / Ctrl+Y,
+  arrow keys nudge the active panel), and one-click PNG export in four post
+  sizes: 1080×1080, 1080×1350, 1920×1080 and 1080×1920 (story).
+- **Fully offline** — every font, sample photo and script is a file in
+  `app/`. Photos you load never leave your machine. No network request is
+  made while the app runs.
 
 ## Run it
 
+Requires Node.js 22 or later.
+
 ```sh
-node serve.ts
+npm start
 ```
 
-Then open http://localhost:8080. Node 22 or later, no dependencies to install.
+Then open <http://localhost:8080> in a desktop browser. Pick a sample photo
+(or load your own), choose a layout and grade, type your title, and export.
 
-## How it works
+To build the submission dossier locally:
 
-- **6 layouts** — Full Bleed, Hero + Three, Four Panel, Nine Panel, Tilted
-  Snaps and Split Diptych — and **6 grades** — Vice Sunset, Neon Night,
-  Golden Hour, Teal Noir, Palm Fade and Mono Heat.
-- **Photos** — four Vice City sample photos ship with the app; you can add
-  your own from the photo tray. Click a photo to lead with it, drag the cover
-  to pan the lead photo, scroll to zoom.
-- **Caption** — title, script subtitle, badge ribbon and a 1–5 heat rating.
-  The title block is drawn with a halftone band, a gradient fill and a dark
-  outline, exactly like a poster.
-- **Export** — one click exports the cover at 1080×1080, 1080×1350 or
-  1920×1080 PNG. Rendering is deterministic: the same state always draws the
-  same pixels.
-- **Undo / redo** and a **Shuffle look** button for random layout + grade.
+```sh
+npm run dossier
+```
 
-## Files
-
-- `app/index.html` — the studio page.
-- `app/style.css` — the golden-hour studio stylesheet.
-- `app/src/cover.js` — the cover engine (layouts, grades, canvas drawing).
-- `app/src/main.js` — the editor UI: toolbar, tray, caption fields, export.
-- `app/src/shots.js` — fixed `?shot=` scenes for the screenshots.
-- `app/samples/` — the four sample photos; `app/fonts/` — Anton and Pacifico
-  under the SIL Open Font License.
-- `main.ts` — hands the app and screenshots to the make.fun grader.
-- `shots.json` — the four screenshot scenes (cover × 3, editor × 1).
+That writes the app, screenshots and `dossier.json` to `out/` (or to
+`$MAKEFUN_OUTPUT_DIR` when set).
 
 ## Screenshots
 
-`screenshots/1-cover.jpg` is the cover; `screenshots/2-editor.jpg` shows the
-studio scene; `screenshots/3-cover.jpg` and `screenshots/4-cover.jpg` show
-the Nine Panel and Tilted Snaps layouts.
+`shots.json` lists the four fixed scenes used for `screenshots/`:
+a square cover, the editor, and two more covers in different layouts and
+grades. Re-render them with the headless browser of your choice against
+`node serve.ts`.
 
-VICE HEAT is an original fan-made cover tool, not affiliated with Rockstar
-Games. No official artwork, logos or fonts are used.
+## Fonts and photos
+
+- Anton and Pacifico are SIL Open Font License 1.1 fonts, subset to the
+  Latin ranges the app uses; their licences live in `app/fonts/`.
+- The four sample photos in `app/samples/` were made for this entry with an
+  image model and are free to use.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
