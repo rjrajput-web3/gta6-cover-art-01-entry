@@ -1,76 +1,63 @@
-[![make.fun](https://make.fun/badge/gta6-cover-art-01.svg)](https://make.fun/bounty/gta6-cover-art-01)
-[![rank](https://make.fun/badge/gta6-cover-art-01/rjrajput-web3/gta6-cover-art-01-entry/rank.svg)](https://make.fun/bounty/gta6-cover-art-01)
-[![reward](https://make.fun/badge/gta6-cover-art-01/rjrajput-web3/gta6-cover-art-01-entry/reward.svg)](https://make.fun/bounty/gta6-cover-art-01)
-
 # VICE HEAT — Leonida Golden-Hour Cover Studio
 
-An offline browser app that turns your photos and a caption into GTA 6-style
-cover art: the multi-panel Leonida poster look with a Vice City golden-hour
-grade, bold Anton lettering, a Pacifico script subtitle, and poster furniture
-(synthwave sun, palms, five-star badge, Leonida banner, skyline, barcode and
-price). Built for the [Make GTA 6 Cover Art](https://make.fun/bounty/gta6-cover-art-01)
-competition on make.fun.
+![gta6-cover-art-01](https://make.fun/badge/gta6-cover-art-01.svg)
+![rank](https://make.fun/badge/gta6-cover-art-01/rjrajput-web3/gta6-cover-art-01-entry/rank.svg)
+![reward](https://make.fun/badge/gta6-cover-art-01/rjrajput-web3/gta6-cover-art-01-entry/reward.svg)
 
-## What it does
+Bounty: https://make.fun/bounty/gta6-cover-art-01
 
-- **10 layouts** — Classic Grid, Hero Duo, Center Poster, Bottom Heavy,
-  Magazine Spread, Duotone Split, Triptych, Big Sun, Diagonal Bands and
-  Frame Story. Every layout is a real arrangement of photo panels, not a
-  filter over one picture.
-- **9 colour grades** — Golden Hour, Vice Neon, Sunset Heat, Duotone Pink,
-  Teal Dusk, Noir, Palm Noir, Pastel Pop and Mono Gold.
-- **6 photo treatments per panel** — Warm, Cool, Mono, Punch, Pastel and
-  Noir, plus drag-to-pan and scroll-to-zoom on any panel.
-- **5 named looks** — Vice Heat, Neon Nights, Golden Hour, Noir Drive and
-  Pastel Vice: one-click presets that set layout, grade, words and
-  furniture together.
-- **Typography controls** — title and subtitle text, title size, letter
-  spacing, and three subtitle styles (script, caps, condensed).
-- **Poster furniture** — synthwave sun disc, palm silhouettes, five-star
-  badge, Leonida banner, skyline, halftone dots, M rating box, barcode with
-  $6.99 price, and a vignette. Each toggles on and off.
-- **Fast workflow** — seeded Surprise Me, full undo/redo, keyboard
-  shortcuts (1–0 layouts, G grade, S surprise, E export, Ctrl+Z / Ctrl+Y,
-  arrow keys nudge the active panel), and one-click PNG export in four post
-  sizes: 1080×1080, 1080×1350, 1920×1080 and 1080×1920 (story).
-- **Fully offline** — every font, sample photo and script is a file in
-  `app/`. Photos you load never leave your machine. No network request is
-  made while the app runs.
+A cover-art studio for a fictional sun-drenched crime saga set in Leonida.
+Build angled-collage game covers that look like they came off a print run:
+white-keyline panels sliced on the diagonal, per-panel duotone grades,
+halation glow bleeding off the highlights, real film grain, a gradient
+display masthead with a neon script accent, and the full retail furniture
+set — rating box, barcode, price burst, pull-quote and platform band.
+
+## What's inside
+
+- **12 collage layouts** — Vice Wedge, Shards, Skyline Split, Diagonal Heat,
+  Triptych Tilt, Hero Frame, Crossfire, Boulevard Fan, Night Stack,
+  Swamp Cut, Carnival Pop and Golden Hour Mono, all drawn as angled
+  polygons with white keyline borders.
+- **12 colour grades** — Golden Hour, Neon Noir, Vice Teal, Sunset Bleach,
+  Midnight Chrome, Tropical Punch, Swamp Haze, Carnival Glow, Desert
+  Mirage, Ultraviolet, Harbor Dusk and Print Poster. Each grade is a
+  filter chain plus an S-curve duotone remap toward its own shadow and
+  highlight colours.
+- **6 per-panel treatments** (Clean, Duotone, Bleach, Noir, Warm Push,
+  Cool Push) so neighbouring panels never grade the same way twice.
+- **5 title looks** with gradient Anton mastheads, heavy outline and a
+  glowing Pacifico script accent.
+- **Five brand-new cinematic sample photos**: a neon beach at night, a
+  muscle car on a sunset boulevard, a rooftop skyline at dusk, a boardwalk
+  carnival and an airboat tearing through a dawn swamp.
+- **A real editor**: click a panel chip to select it, drag on the cover to
+  pan its photo, scroll to zoom, click the chip again to cycle its photo,
+  upload your own photo, undo/redo history, a seeded Surprise Me that
+  remixes layout × grade × look × photo order, and grain / halation /
+  keyline sliders.
+- **Print-ready PNG export** in four sizes, up to 2160 × 2700.
+- **Fully offline**: no libraries, no network requests, fonts and photos
+  ship inside `app/`.
 
 ## Run it
 
-Requires Node.js 22 or later.
-
 ```sh
-npm start
+node serve.ts          # studio on http://localhost:8080
+node main.ts           # build the hand-in dossier into /output
 ```
 
-Then open <http://localhost:8080> in a desktop browser. Pick a sample photo
-(or load your own), choose a layout and grade, type your title, and export.
+## Layout of the repo
 
-To build the submission dossier locally:
+- `app/index.html` — the studio page
+- `app/src/cover.js` — the renderer: layouts, grades, treatments, title, furniture
+- `app/src/main.js` — editor wiring, history, drag/zoom, export
+- `app/src/shots.js` — reproducible screenshot scenes from the URL query
+- `app/samples/` — the five sample photos
+- `app/fonts/` — Anton and Pacifico, subset, SIL Open Font License
+- `screenshots/` — the four judged renders
+- `main.ts` / `serve.ts` — hand-in builder and local dev server
 
-```sh
-npm run dossier
-```
-
-That writes the app, screenshots and `dossier.json` to `out/` (or to
-`$MAKEFUN_OUTPUT_DIR` when set).
-
-## Screenshots
-
-`shots.json` lists the four fixed scenes used for `screenshots/`:
-a square cover, the editor, and two more covers in different layouts and
-grades. Re-render them with the headless browser of your choice against
-`node serve.ts`.
-
-## Fonts and photos
-
-- Anton and Pacifico are SIL Open Font License 1.1 fonts, subset to the
-  Latin ranges the app uses; their licences live in `app/fonts/`.
-- The four sample photos in `app/samples/` were made for this entry with an
-  image model and are free to use.
-
-## License
-
-MIT — see [LICENSE](LICENSE).
+Fonts are licensed under the SIL Open Font License 1.1 (see
+`app/fonts/OFL.txt` and `app/fonts/Pacifico-OFL.txt`). Everything else is
+MIT — see `LICENSE`.

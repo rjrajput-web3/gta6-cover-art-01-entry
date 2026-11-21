@@ -1,1 +1,15 @@
-{"description":"VICE HEAT — Leonida Golden-Hour Cover Studio. An offline browser app that turns photos and a caption into GTA 6-style cover art.","license":"MIT","name":"vice-heat-cover-studio","private":true,"scripts":{"dossier":"node main.ts","shots":"node scripts/shots.mjs","start":"node serve.ts"},"type":"module","version":"8.0.0"}
+{
+  "name": "vice-heat-cover-studio",
+  "version": "9.0.0",
+  "description": "VICE HEAT — Leonida Golden-Hour Cover Studio: an offline angled-collage game cover maker with duotone grades, halation, film grain and print furniture.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "serve": "node serve.ts",
+    "build": "node main.ts"
+  }
+}

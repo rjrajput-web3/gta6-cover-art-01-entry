@@ -1,1 +1,26 @@
-[{"h":1080,"name":"1-cover.jpg","query":"?shot=cover&photo=rooftop&caption=VICE%20HEAT&layout=classic&grade=golden","w":1080},{"h":720,"name":"2-editor.jpg","query":"?shot=editor&photo=golden-mile&caption=Leonida%20Nights&layout=hero-duo&grade=vice-neon","w":1280},{"h":1080,"name":"3-cover.jpg","query":"?shot=cover&photo=palm-dusk&caption=Neon%20Drive&layout=big-sun&grade=sunset-heat","w":1080},{"h":1080,"name":"4-cover.jpg","query":"?shot=cover&photo=boardwalk&caption=Sunset%20Heist&layout=triptych&grade=pastel-pop","w":1080}]
+[
+  {
+    "name": "1-cover.jpg",
+    "query": "?shot=cover&layout=0&grade=0&look=0&titleA=VICE&titleB=HEAT&script=Leonida%20Nights&photos=0,1,3,2,4",
+    "w": 900,
+    "h": 1125
+  },
+  {
+    "name": "2-editor.jpg",
+    "query": "?shot=editor&layout=4&grade=7&look=1&titleA=VICE&titleB=HEAT&script=Carnival%20of%20Vice&photos=3,1,0,2,4",
+    "w": 1280,
+    "h": 800
+  },
+  {
+    "name": "3-cover.jpg",
+    "query": "?shot=cover&layout=6&grade=1&look=1&titleA=NEON&titleB=VICE&script=Midnight%20in%20Leonida&photos=2,0,3,1,4",
+    "w": 900,
+    "h": 1125
+  },
+  {
+    "name": "4-cover.jpg",
+    "query": "?shot=cover&layout=9&grade=6&look=2&titleA=SWAMP&titleB=HEAT&script=Run%20the%20Glades&photos=4,0,1,3,2",
+    "w": 900,
+    "h": 1125
+  }
+]

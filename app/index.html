@@ -4,93 +4,69 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>VICE HEAT — Leonida Golden-Hour Cover Studio</title>
-<meta name="description" content="Turn your photos and a caption into GTA 6-style cover art, offline in your browser.">
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">
-    <span class="brand-mark">VI</span>
-    <div>
-      <h1>VICE HEAT</h1>
-      <p>Leonida Golden-Hour Cover Studio</p>
-    </div>
-  </div>
-  <div class="top-actions">
-    <button id="undo" type="button" title="Undo (Ctrl+Z)">Undo</button>
-    <button id="redo" type="button" title="Redo (Ctrl+Y)">Redo</button>
-    <button id="surprise" type="button" class="accent" title="Random layout + grade (S)">Surprise Me</button>
-    <button id="reset" type="button" title="Back to the Vice Heat look">Reset</button>
-  </div>
-</header>
 <main class="app">
-  <section class="stage">
-    <canvas id="cover" width="1080" height="1080" aria-label="Your cover art"></canvas>
-    <p class="hint">Drag a panel to pan it · Scroll over a panel to zoom · Arrow keys nudge the active panel · Click a panel to select it</p>
+  <section class="controls" aria-label="Cover controls">
+    <header class="brand">
+      <p class="brand-script">Leonida Nights</p>
+      <h1>VICE HEAT</h1>
+      <p class="tagline">Golden-Hour Cover Studio — angled collage panels, duotone grades, halation and print furniture. Fully offline.</p>
+    </header>
+
+    <div class="group">
+      <label>Layout
+        <select id="layout"></select>
+      </label>
+      <label>Grade
+        <select id="grade"></select>
+      </label>
+      <label>Title look
+        <select id="look"></select>
+      </label>
+    </div>
+
+    <div class="group">
+      <label>Title line 1 <input id="titleA" type="text" maxlength="14"></label>
+      <label>Title line 2 <input id="titleB" type="text" maxlength="14"></label>
+      <label>Script accent <input id="script" type="text" maxlength="30"></label>
+      <label>Sub strip <input id="sub" type="text" maxlength="60"></label>
+      <label>Cover quote <input id="quote" type="text" maxlength="70"></label>
+      <label>Quote source <input id="source" type="text" maxlength="30"></label>
+    </div>
+
+    <div class="group sliders">
+      <label>Film grain <input id="grain" type="range" min="0" max="1" step="0.05"></label>
+      <label>Halation glow <input id="halation" type="range" min="0" max="1" step="0.05"></label>
+      <label>Keyline width <input id="keyline" type="range" min="0" max="22" step="1"></label>
+    </div>
+
+    <div class="group">
+      <p class="hint">Panel photos — click a chip, then drag the cover to pan it, scroll to zoom it.</p>
+      <div id="panels" class="chips"></div>
+      <label>Your photo <input id="upload" type="file" accept="image/*"></label>
+    </div>
+
+    <div class="actions">
+      <button id="surprise" type="button">★ Surprise Me</button>
+      <button id="undo" type="button">Undo</button>
+      <button id="redo" type="button">Redo</button>
+    </div>
+    <div class="actions">
+      <button id="export" type="button">Export PNG</button>
+      <select id="size" aria-label="Export size">
+        <option value="1">1080 × 1350</option>
+        <option value="2">2160 × 2700 (print)</option>
+        <option value="0.75">810 × 1013</option>
+        <option value="0.5">540 × 675</option>
+      </select>
+    </div>
+    <p id="status" role="status"></p>
   </section>
-  <aside class="controls" aria-label="Cover controls">
-    <section class="group">
-      <h2>Photos</h2>
-      <p class="group-note">Four panels, four photos. Pick a sample or upload your own for each panel.</p>
-      <div id="photos"></div>
-    </section>
-    <section class="group">
-      <h2>Layout <span class="keys">keys 1–0</span></h2>
-      <div id="layouts" class="chip-grid"></div>
-    </section>
-    <section class="group">
-      <h2>Grade <span class="keys">key G cycles</span></h2>
-      <div id="grades" class="swatch-grid"></div>
-    </section>
-    <section class="group">
-      <h2>Looks</h2>
-      <div id="presets" class="chip-grid"></div>
-    </section>
-    <section class="group">
-      <h2>Words</h2>
-      <label>Title
-        <input id="title" type="text" maxlength="24" value="VICE HEAT" autocomplete="off">
-      </label>
-      <label>Subtitle
-        <input id="subtitle" type="text" maxlength="40" value="Leonida Nights" autocomplete="off">
-      </label>
-      <label>Subtitle style
-        <select id="subtitleStyle">
-          <option value="script">Script (Pacifico)</option>
-          <option value="caps">Caps (Anton)</option>
-          <option value="condensed">Condensed (Anton)</option>
-        </select>
-      </label>
-      <label>Title size
-        <span class="slider-row">
-          <input id="titleSize" type="range" min="0.6" max="1.4" step="0.05" value="1">
-          <output id="titleSizeOut">100%</output>
-        </span>
-      </label>
-      <label>Letter spacing
-        <span class="slider-row">
-          <input id="letterSpacing" type="range" min="0" max="0.3" step="0.01" value="0.08">
-          <output id="letterSpacingOut">8%</output>
-        </span>
-      </label>
-    </section>
-    <section class="group">
-      <h2>Poster furniture</h2>
-      <div id="furniture" class="check-grid"></div>
-    </section>
-    <section class="group">
-      <h2>Export <span class="keys">key E</span></h2>
-      <label>Size
-        <select id="exportSize"></select>
-      </label>
-      <label>Seed
-        <input id="seed" type="number" value="20261121" step="1">
-      </label>
-      <button id="export" type="button" class="accent big">Export PNG</button>
-      <p id="status" role="status"></p>
-    </section>
-    <p class="foot">Fully offline — your photos never leave this machine. Shortcuts: 1–0 layouts · G grade · S surprise · E export · Ctrl+Z / Ctrl+Y undo &amp; redo.</p>
-  </aside>
+  <section class="stage">
+    <canvas id="cover" width="1080" height="1350" aria-label="Your VICE HEAT cover"></canvas>
+  </section>
 </main>
 <script type="module" src="./src/main.js"></script>
 </body>
